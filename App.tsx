@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { seedIfEmpty } from './src/db/seed';
 import { useSettingsStore } from './src/store/settingsStore';
@@ -23,8 +23,12 @@ import {
   GeistMono_400Regular,
   GeistMono_500Medium,
 } from '@expo-google-fonts/geist-mono';
+import * as Notifications from 'expo-notifications';
 
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
+import { navigationRef } from './src/navigation/ref';
+import { setupChannels } from './src/notifications/channels';
+import { scheduleAllNotifications } from './src/notifications/scheduler';
 
 import { TodayScreen } from './src/screens/TodayScreen';
 import { OnboardingWelcomeScreen } from './src/screens/OnboardingWelcomeScreen';
@@ -40,6 +44,16 @@ import { EveningNotifScreen } from './src/screens/EveningNotifScreen';
 import { GratitudeComposerScreen } from './src/screens/GratitudeComposerScreen';
 import { GratitudeJournalScreen } from './src/screens/GratitudeJournalScreen';
 import { WeeklyRecapScreen } from './src/screens/WeeklyRecapScreen';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export type RootStackParamList = {
   OnboardingWelcome: undefined;
@@ -63,7 +77,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 function AppNavigator() {
   const { t } = useTheme();
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
         initialRouteName="Today"
         screenOptions={{
@@ -109,15 +123,32 @@ export default function App() {
   const loadStats        = useStatsStore(s => s.load);
 
   const [storesReady, setStoresReady] = useState(false);
+  const responseListenerRef = useRef<Notifications.EventSubscription | null>(null);
 
   useEffect(() => {
     if (!fontsLoaded) return;
     (async () => {
+      await setupChannels();
       await seedIfEmpty();
-      await Promise.all([loadSettings(), loadAffirmations(), loadJournal(), loadStats()]);
+      const settings = await loadSettings().then(() => useSettingsStore.getState());
+      await Promise.all([loadAffirmations(), loadJournal(), loadStats()]);
+      await scheduleAllNotifications(settings);
       setStoresReady(true);
     })();
   }, [fontsLoaded]);
+
+  useEffect(() => {
+    responseListenerRef.current = Notifications.addNotificationResponseReceivedListener(response => {
+      const slot = response.notification.request.content.data?.slot as string | undefined;
+      if (!navigationRef.isReady()) return;
+      if (slot === 'gratitude') {
+        navigationRef.navigate('EveningNotif');
+      } else if (slot === 'anchor1' || slot === 'anchor2' || slot === 'anchor3') {
+        navigationRef.navigate('AffirmationMoment');
+      }
+    });
+    return () => responseListenerRef.current?.remove();
+  }, []);
 
   if (!fontsLoaded || !storesReady) {
     return (

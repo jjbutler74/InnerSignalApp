@@ -10,6 +10,7 @@ import { Display, DisplayItalic, Eyebrow } from '../components/Typography';
 import { ChevL, Moon } from '../components/Icons';
 import { useTheme } from '../theme/ThemeContext';
 import { useSettingsStore } from '../store/settingsStore';
+import { scheduleAllNotifications } from '../notifications/scheduler';
 import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Schedule'>;
@@ -46,7 +47,9 @@ export function ScheduleScreen() {
         : picking === 'anchor1' ? 'scheduleAnchor1'
         : picking === 'anchor2' ? 'scheduleAnchor2'
         : 'scheduleAnchor3';
-      update({ [key]: val });
+      update({ [key]: val }).then(() => {
+        scheduleAllNotifications(useSettingsStore.getState());
+      });
     }
     setPicking(null);
   };

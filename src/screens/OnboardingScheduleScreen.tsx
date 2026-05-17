@@ -9,6 +9,7 @@ import { Display, DisplayItalic, Eyebrow } from '../components/Typography';
 import { useTheme } from '../theme/ThemeContext';
 import { useSettingsStore } from '../store/settingsStore';
 import * as Notifications from 'expo-notifications';
+import { scheduleAllNotifications } from '../notifications/scheduler';
 import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'OnboardingSchedule'>;
@@ -65,6 +66,7 @@ export function OnboardingScheduleScreen() {
         [{ text: 'OK', onPress: () => nav.navigate('Today') }],
       );
     } else {
+      await scheduleAllNotifications(useSettingsStore.getState());
       nav.navigate('Today');
     }
   };
