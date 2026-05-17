@@ -1,0 +1,65 @@
+import * as SQLite from 'expo-sqlite';
+
+let _db: SQLite.SQLiteDatabase | null = null;
+
+export async function getDb(): Promise<SQLite.SQLiteDatabase> {
+  if (_db) return _db;
+  _db = await SQLite.openDatabaseAsync('innersignal.db');
+  await migrate(_db);
+  return _db;
+}
+
+async function migrate(db: SQLite.SQLiteDatabase) {
+  await db.execAsync(`PRAGMA journal_mode = WAL;`);
+
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS packs (
+      id         TEXT PRIMARY KEY,
+      name       TEXT NOT NULL,
+      tone       TEXT NOT NULL,
+      is_built_in INTEGER NOT NULL DEFAULT 1,
+      is_active   INTEGER NOT NULL DEFAULT 1
+    );
+
+    CREATE TABLE IF NOT EXISTS affirmations (
+      id          TEXT PRIMARY KEY,
+      text        TEXT NOT NULL,
+      pack_id     TEXT NOT NULL REFERENCES packs(id),
+      is_favorite INTEGER NOT NULL DEFAULT 0,
+      seen_count  INTEGER NOT NULL DEFAULT 0,
+      created_at  TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS journal_entries (
+      id         TEXT PRIMARY KEY,
+      date       TEXT NOT NULL UNIQUE,
+      items      TEXT NOT NULL,
+      mood       TEXT NOT NULL,
+      mood_color TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS completions (
+      id              TEXT PRIMARY KEY,
+      date            TEXT NOT NULL,
+      affirmation_id  TEXT NOT NULL,
+      slot            TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS settings (
+      key   TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_completions_date ON completions(date);
+    CREATE INDEX IF NOT EXISTS idx_affirmations_pack ON affirmations(pack_id);
+  `);
+}
+
+export function uid(): string {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
