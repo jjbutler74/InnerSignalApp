@@ -8,23 +8,72 @@ import { Chip } from '../components/Chip';
 import { Eyebrow, Display, DisplayItalic } from '../components/Typography';
 import { Leaf, Settings, Sun, Bolt, Moon, Heart, Flame, More } from '../components/Icons';
 import { useTheme } from '../theme/ThemeContext';
+import { useSettingsStore } from '../store/settingsStore';
+import { useAffirmationStore } from '../store/affirmationStore';
+import { useStatsStore } from '../store/statsStore';
 import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Today'>;
+
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function formattedDate(): string {
+  return new Date().toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric',
+  }).toUpperCase();
+}
+
+function nextAnchorLabel(a1: string, a2: string, a3: string): string {
+  const now = new Date();
+  const mins = now.getHours() * 60 + now.getMinutes();
+  for (const t of [a1, a2, a3]) {
+    const [h, m] = t.split(':').map(Number);
+    if (h * 60 + m > mins) return t;
+  }
+  return 'tomorrow';
+}
 
 export function TodayScreen() {
   const { t, fonts } = useTheme();
   const nav = useNavigation<Nav>();
 
+  const name             = useSettingsStore(s => s.name);
+  const scheduleAnchor1  = useSettingsStore(s => s.scheduleAnchor1);
+  const scheduleAnchor2  = useSettingsStore(s => s.scheduleAnchor2);
+  const scheduleAnchor3  = useSettingsStore(s => s.scheduleAnchor3);
+  const scheduleGratitude = useSettingsStore(s => s.scheduleGratitude);
+
+  const activeAffirmation = useAffirmationStore(s => s.activeAffirmation);
+  const toggleFavorite    = useAffirmationStore(s => s.toggleFavorite);
+
+  const streakDays        = useStatsStore(s => s.streakDays);
+  const weeklyCompletions = useStatsStore(s => s.weeklyCompletions);
+
+  const displayName = name || 'there';
+  const nextAnchor  = nextAnchorLabel(scheduleAnchor1, scheduleAnchor2, scheduleAnchor3);
+
+  const now = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const toMins = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+
   const schedule = [
-    { time: '7:30',  title: 'Morning anchor', sub: 'Set the tone',  status: 'done',    tone: 'sage'  },
-    { time: '12:30', title: 'Midday reset',   sub: 'Coming up',     status: 'next',    tone: 'terra' },
-    { time: '17:00', title: 'Evening pause',  sub: 'Tonight',       status: 'pending', tone: 'amber' },
-    { time: '21:30', title: 'Gratitude',      sub: '3 things',      status: 'pending', tone: 'night' },
+    { time: scheduleAnchor1,  title: 'Morning anchor', sub: 'Set the tone',  tone: 'sage'  },
+    { time: scheduleAnchor2,  title: 'Midday reset',   sub: 'Coming up',     tone: 'terra' },
+    { time: scheduleAnchor3,  title: 'Evening pause',  sub: 'Tonight',       tone: 'amber' },
+    { time: scheduleGratitude, title: 'Gratitude',      sub: '3 things',      tone: 'night' },
   ] as const;
 
-  const weekBars = [1, 1, 1, 0.7, 0.9, 0.5, 0];
-  const weekDays = ['M','T','W','T','F','S','S'];
+  const statusOf = (time: string) => {
+    const m = toMins(time);
+    if (m < nowMins - 30) return 'done';
+    if (m <= nowMins + 60) return 'next';
+    return 'pending';
+  };
 
   const toneColor = (tone: string) => {
     switch (tone) {
@@ -43,10 +92,17 @@ export function TodayScreen() {
     }
   };
 
+  const weekBars = weeklyCompletions.map(done => done ? 1 : 0);
+  const weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  const todayDow = (new Date().getDay() + 6) % 7; // 0=Mon
+
+  const affText = activeAffirmation?.text ?? 'Loading your affirmation…';
+  const isFav   = activeAffirmation?.isFavorite ?? false;
+
   return (
     <Screen>
       {/* Header */}
-      <View style={[s.header]}>
+      <View style={s.header}>
         <View style={s.headerLeft}>
           <View style={[s.logoBox, { backgroundColor: t.sage }]}>
             <Leaf size={16} color="#fff"/>
@@ -60,14 +116,14 @@ export function TodayScreen() {
 
       {/* Greeting */}
       <View style={s.greeting}>
-        <Eyebrow>Tuesday · May 11</Eyebrow>
+        <Eyebrow>{formattedDate()}</Eyebrow>
         <Display style={{ fontSize: 38, lineHeight: 42, marginTop: 6 }}>
-          {'Good morning, '}
-          <DisplayItalic style={{ fontSize: 38, color: t.terra }}>Maya</DisplayItalic>
+          {`${greeting()}, `}
+          <DisplayItalic style={{ fontSize: 38, color: t.terra }}>{displayName}</DisplayItalic>
           {'.'}
         </Display>
         <Text style={[s.subtext, { color: t.muted, fontFamily: fonts.sans }]}>
-          Your first anchor lands at 9:00.
+          {`Your first anchor lands at ${nextAnchor}.`}
         </Text>
       </View>
 
@@ -86,13 +142,17 @@ export function TodayScreen() {
             <Pressable><More size={18} color={t.muted}/></Pressable>
           </View>
           <Display style={{ fontSize: 22, lineHeight: 28, marginTop: 4 }}>
-            <DisplayItalic style={{ fontSize: 22, color: t.terra }}>I am allowed</DisplayItalic>
-            {' to take up space — and to move slowly when I need to.'}
+            {affText}
           </Display>
           <View style={s.cardActions}>
-            <Pressable style={[s.actionBtn, { backgroundColor: t.ink }]}>
+            <Pressable
+              style={[s.actionBtn, { backgroundColor: isFav ? t.terra : t.ink }]}
+              onPress={() => activeAffirmation && toggleFavorite(activeAffirmation.id)}
+            >
               <Heart size={14} color={t.bg}/>
-              <Text style={[s.actionBtnText, { color: t.bg, fontFamily: fonts.sansMedium }]}>Save to favorites</Text>
+              <Text style={[s.actionBtnText, { color: t.bg, fontFamily: fonts.sansMedium }]}>
+                {isFav ? 'Saved' : 'Save to favorites'}
+              </Text>
             </Pressable>
             <Pressable onPress={() => nav.navigate('AffirmationMoment')}>
               <Text style={[s.ghostBtn, { color: t.muted, fontFamily: fonts.sansMedium }]}>Read & breathe</Text>
@@ -102,36 +162,39 @@ export function TodayScreen() {
 
         {/* Day schedule */}
         <Card padding={0} style={{ marginBottom: 12 }}>
-          {schedule.map((item, i) => (
-            <Pressable
-              key={item.time}
-              onPress={item.status === 'next' ? () => nav.navigate('AffirmationMoment') : undefined}
-              style={[s.scheduleRow, i > 0 && { borderTopWidth: 1, borderTopColor: t.hairline }]}
-            >
-              <View style={[s.scheduleIcon, {
-                backgroundColor: item.tone === 'night' ? t.night : toneSoft(item.tone),
-                opacity: item.status === 'done' ? 0.5 : 1,
-              }]}>
-                {item.tone === 'sage'  && <Sun size={16} color={toneColor(item.tone)}/>}
-                {item.tone === 'terra' && <Bolt size={16} color={toneColor(item.tone)}/>}
-                {item.tone === 'amber' && <Leaf size={16} color={toneColor(item.tone)}/>}
-                {item.tone === 'night' && <Moon size={16} color="#fff"/>}
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[s.scheduleTitle, {
-                  color: item.status === 'done' ? t.muted : t.ink,
-                  textDecorationLine: item.status === 'done' ? 'line-through' : 'none',
-                  fontFamily: fonts.sansMedium,
-                }]}>{item.title}</Text>
-                <Text style={[s.scheduleSub, { color: t.muted, fontFamily: fonts.sans }]}>{item.sub}</Text>
-              </View>
-              <Text style={[s.scheduleTime, {
-                color: item.status === 'next' ? t.terra : t.muted,
-                fontFamily: fonts.mono,
-                fontWeight: item.status === 'next' ? '600' : '400',
-              }]}>{item.time}</Text>
-            </Pressable>
-          ))}
+          {schedule.map((item, i) => {
+            const status = statusOf(item.time);
+            return (
+              <Pressable
+                key={item.time}
+                onPress={status === 'next' ? () => nav.navigate('AffirmationMoment') : undefined}
+                style={[s.scheduleRow, i > 0 && { borderTopWidth: 1, borderTopColor: t.hairline }]}
+              >
+                <View style={[s.scheduleIcon, {
+                  backgroundColor: item.tone === 'night' ? t.night : toneSoft(item.tone),
+                  opacity: status === 'done' ? 0.5 : 1,
+                }]}>
+                  {item.tone === 'sage'  && <Sun  size={16} color={toneColor(item.tone)}/>}
+                  {item.tone === 'terra' && <Bolt size={16} color={toneColor(item.tone)}/>}
+                  {item.tone === 'amber' && <Leaf size={16} color={toneColor(item.tone)}/>}
+                  {item.tone === 'night' && <Moon size={16} color="#fff"/>}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[s.scheduleTitle, {
+                    color: status === 'done' ? t.muted : t.ink,
+                    textDecorationLine: status === 'done' ? 'line-through' : 'none',
+                    fontFamily: fonts.sansMedium,
+                  }]}>{item.title}</Text>
+                  <Text style={[s.scheduleSub, { color: t.muted, fontFamily: fonts.sans }]}>{item.sub}</Text>
+                </View>
+                <Text style={[s.scheduleTime, {
+                  color: status === 'next' ? t.terra : t.muted,
+                  fontFamily: fonts.mono,
+                  fontWeight: status === 'next' ? '600' : '400',
+                }]}>{item.time}</Text>
+              </Pressable>
+            );
+          })}
         </Card>
 
         {/* Stats row */}
@@ -140,7 +203,7 @@ export function TodayScreen() {
             <Eyebrow>Streak</Eyebrow>
             <View style={s.streakRow}>
               <Flame size={20} color={t.terra}/>
-              <Display style={{ fontSize: 28 }}> 14</Display>
+              <Display style={{ fontSize: 28 }}> {streakDays}</Display>
               <Text style={[s.streakUnit, { color: t.muted, fontFamily: fonts.sans }]}> days</Text>
             </View>
           </Card>
@@ -151,17 +214,17 @@ export function TodayScreen() {
                 <View key={i} style={[s.weekBar, {
                   flex: 1,
                   height: Math.max(v * 60, 4),
-                  backgroundColor: i === 3 ? t.terra : v ? t.sage : t.divider,
-                  opacity: v ? 1 : 0.5,
+                  backgroundColor: i === todayDow ? t.terra : v ? t.sage : t.divider,
+                  opacity: i > todayDow ? 0.35 : 1,
                 }]}/>
               ))}
             </View>
             <View style={s.weekLabels}>
               {weekDays.map((d, i) => (
                 <Text key={i} style={[s.weekLabel, {
-                  color: i === 3 ? t.terra : t.muted,
+                  color: i === todayDow ? t.terra : t.muted,
                   fontFamily: fonts.mono,
-                  fontWeight: i === 3 ? '600' : '400',
+                  fontWeight: i === todayDow ? '600' : '400',
                 }]}>{d}</Text>
               ))}
             </View>
@@ -173,30 +236,30 @@ export function TodayScreen() {
 }
 
 const s = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 22, paddingVertical: 14 },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoBox: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  logoText: { fontSize: 15 },
-  greeting: { paddingHorizontal: 22, paddingBottom: 8 },
-  subtext: { fontSize: 14, marginTop: 8 },
-  chips: { flexDirection: 'row', gap: 8, paddingHorizontal: 22, paddingVertical: 12 },
-  scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 22, paddingBottom: 24 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  cardActions: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 14 },
-  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 999 },
-  actionBtnText: { fontSize: 13 },
-  ghostBtn: { fontSize: 13 },
-  scheduleRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 18, paddingVertical: 10 },
+  header:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 22, paddingVertical: 14 },
+  headerLeft:   { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  logoBox:      { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  logoText:     { fontSize: 15 },
+  greeting:     { paddingHorizontal: 22, paddingBottom: 8 },
+  subtext:      { fontSize: 14, marginTop: 8 },
+  chips:        { flexDirection: 'row', gap: 8, paddingHorizontal: 22, paddingVertical: 12 },
+  scroll:       { flex: 1 },
+  scrollContent:{ paddingHorizontal: 22, paddingBottom: 24 },
+  cardHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  cardActions:  { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 14 },
+  actionBtn:    { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 999 },
+  actionBtnText:{ fontSize: 13 },
+  ghostBtn:     { fontSize: 13 },
+  scheduleRow:  { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 18, paddingVertical: 10 },
   scheduleIcon: { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  scheduleTitle: { fontSize: 14, lineHeight: 17 },
-  scheduleSub: { fontSize: 12, lineHeight: 16, marginTop: 1 },
+  scheduleTitle:{ fontSize: 14, lineHeight: 17 },
+  scheduleSub:  { fontSize: 12, lineHeight: 16, marginTop: 1 },
   scheduleTime: { fontSize: 12 },
-  statsRow: { flexDirection: 'row' },
-  streakRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 4 },
-  streakUnit: { fontSize: 12 },
-  weekChart: { flexDirection: 'row', gap: 4, marginTop: 8, alignItems: 'flex-end', height: 64 },
-  weekBar: { borderRadius: 3 },
-  weekLabels: { flexDirection: 'row', marginTop: 6 },
-  weekLabel: { flex: 1, textAlign: 'center', fontSize: 10 },
+  statsRow:     { flexDirection: 'row' },
+  streakRow:    { flexDirection: 'row', alignItems: 'baseline', marginTop: 4 },
+  streakUnit:   { fontSize: 12 },
+  weekChart:    { flexDirection: 'row', gap: 4, marginTop: 8, alignItems: 'flex-end', height: 64 },
+  weekBar:      { borderRadius: 3 },
+  weekLabels:   { flexDirection: 'row', marginTop: 6 },
+  weekLabel:    { flex: 1, textAlign: 'center', fontSize: 10 },
 });

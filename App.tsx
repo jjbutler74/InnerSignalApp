@@ -1,5 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
+import { seedIfEmpty } from './src/db/seed';
+import { useSettingsStore } from './src/store/settingsStore';
+import { useAffirmationStore } from './src/store/affirmationStore';
+import { useJournalStore } from './src/store/journalStore';
+import { useStatsStore } from './src/store/statsStore';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -98,7 +103,23 @@ export default function App() {
     GeistMono_500Medium,
   });
 
-  if (!fontsLoaded) {
+  const loadSettings     = useSettingsStore(s => s.load);
+  const loadAffirmations = useAffirmationStore(s => s.load);
+  const loadJournal      = useJournalStore(s => s.load);
+  const loadStats        = useStatsStore(s => s.load);
+
+  const [storesReady, setStoresReady] = useState(false);
+
+  useEffect(() => {
+    if (!fontsLoaded) return;
+    (async () => {
+      await seedIfEmpty();
+      await Promise.all([loadSettings(), loadAffirmations(), loadJournal(), loadStats()]);
+      setStoresReady(true);
+    })();
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded || !storesReady) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F2EDE2' }}>
         <ActivityIndicator color="#6F8169"/>
