@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '../components/Screen';
@@ -9,12 +10,13 @@ import { Eyebrow, Display, DisplayItalic } from '../components/Typography';
 import { ChevL } from '../components/Icons';
 import { useTheme } from '../theme/ThemeContext';
 import { useSettingsStore } from '../store/settingsStore';
+import { useStatsStore } from '../store/statsStore';
 import type { UserSettings } from '../types';
 import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Settings'>;
 
-const SOUND_CYCLE: UserSettings['sound'][]  = ['bell', 'chime', 'silent'];
+const SOUND_CYCLE: UserSettings['sound'][] = ['bell', 'chime', 'silent'];
 const THEME_CYCLE: UserSettings['theme'][]  = ['auto', 'light', 'dark'];
 
 const SOUND_LABEL: Record<UserSettings['sound'], string> = {
@@ -28,6 +30,7 @@ export function SettingsScreen() {
   const { t, fonts } = useTheme();
   const nav = useNavigation<Nav>();
 
+  const streakDays = useStatsStore(s => s.streakDays);
   const name    = useSettingsStore(s => s.name);
   const sound   = useSettingsStore(s => s.sound);
   const theme   = useSettingsStore(s => s.theme);
@@ -40,11 +43,13 @@ export function SettingsScreen() {
   const initials = (name || '?')[0].toUpperCase();
 
   const cycleSound = () => {
+    Haptics.selectionAsync();
     const next = SOUND_CYCLE[(SOUND_CYCLE.indexOf(sound) + 1) % SOUND_CYCLE.length];
     update({ sound: next });
   };
 
   const cycleTheme = () => {
+    Haptics.selectionAsync();
     const next = THEME_CYCLE[(THEME_CYCLE.indexOf(theme) + 1) % THEME_CYCLE.length];
     update({ theme: next });
   };
@@ -67,7 +72,9 @@ export function SettingsScreen() {
           </View>
           <View>
             <Text style={[s.profileName, { color: t.ink, fontFamily: fonts.sansMedium }]}>{name || 'You'}</Text>
-            <Text style={[s.profileSub, { color: t.muted, fontFamily: fonts.sans }]}>{practicingSince()}</Text>
+            <Text style={[s.profileSub, { color: t.muted, fontFamily: fonts.sans }]}>
+              {streakDays > 0 ? `${streakDays} day streak` : 'Just getting started'}
+            </Text>
           </View>
         </View>
 

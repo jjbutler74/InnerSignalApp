@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Animated, Easing } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as Haptics from 'expo-haptics';
 import { Screen } from '../components/Screen';
 import { Close, Heart, Check } from '../components/Icons';
 import { Eyebrow } from '../components/Typography';
@@ -71,13 +72,16 @@ export function AffirmationMomentScreen() {
 
   const handleFeltIt = async () => {
     if (!activeAffirmation) return;
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     await markSeen(activeAffirmation.id);
     await recordCompletion(activeAffirmation.id, 'anchor1');
     nav.goBack();
   };
 
   const handleSave = () => {
-    if (activeAffirmation) toggleFavorite(activeAffirmation.id);
+    if (!activeAffirmation) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    toggleFavorite(activeAffirmation.id);
   };
 
   return (

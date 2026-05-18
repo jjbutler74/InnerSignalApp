@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, View, StyleSheet } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '../theme/ThemeContext';
 
 interface ToggleProps {
@@ -11,7 +12,7 @@ export function Toggle({ on, onToggle }: ToggleProps) {
   const { t } = useTheme();
   return (
     <Pressable
-      onPress={() => onToggle?.(!on)}
+      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onToggle?.(!on); }}
       style={[styles.track, { backgroundColor: on ? t.sage : t.divider }]}
       accessibilityRole="switch"
       accessibilityState={{ checked: on }}

@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as Haptics from 'expo-haptics';
 import { Screen } from '../components/Screen';
 import { Close, Check } from '../components/Icons';
 import { Eyebrow, Display, DisplayItalic } from '../components/Typography';
@@ -33,6 +34,7 @@ export function GratitudeComposerScreen() {
   const filledCount = draft.items.filter(i => i.trim()).length;
 
   const handleSave = async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const entry = await saveDraft();
     if (entry) {
       await loadStats();
@@ -150,7 +152,7 @@ export function GratitudeComposerScreen() {
                     shadowRadius: 4,
                     elevation: active ? 3 : 0,
                   }]}
-                  onPress={() => setMood(mood)}
+                  onPress={() => { Haptics.selectionAsync(); setMood(mood); }}
                 >
                   <Text style={[s.moodText, { color: active ? '#fff' : t.ink2, fontFamily: fonts.sansMedium }]}>
                     {mood}
