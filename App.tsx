@@ -129,9 +129,9 @@ export default function App() {
   useEffect(() => {
     if (!fontsLoaded) return;
     (async () => {
-      await setupChannels();
       await seedIfEmpty();
       const settings = await loadSettings().then(() => useSettingsStore.getState());
+      await setupChannels(settings.sound);
       await Promise.all([loadAffirmations(), loadJournal(), loadStats()]);
       await scheduleAllNotifications(settings);
       setInitialRoute(settings.onboardingComplete ? 'Today' : 'OnboardingWelcome');

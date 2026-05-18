@@ -80,6 +80,7 @@ export async function scheduleAllNotifications(settings: UserSettings): Promise<
         title: cfg.title,
         body: cfg.body,
         data: { slot: cfg.slot },
+        sound: settings.sound === 'silent' ? false : settings.sound,
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,

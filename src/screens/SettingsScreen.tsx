@@ -1,6 +1,9 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { setupChannels } from '../notifications/channels';
+import { scheduleAllNotifications } from '../notifications/scheduler';
+import { playPreview } from '../utils/sound';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '../components/Screen';
@@ -42,10 +45,14 @@ export function SettingsScreen() {
   const scheduleValue = `${anchor1} · ${anchor2} · ${anchor3}`;
   const initials = (name || '?')[0].toUpperCase();
 
-  const cycleSound = () => {
+  const cycleSound = async () => {
     Haptics.selectionAsync();
     const next = SOUND_CYCLE[(SOUND_CYCLE.indexOf(sound) + 1) % SOUND_CYCLE.length];
-    update({ sound: next });
+    await update({ sound: next });
+    const s = useSettingsStore.getState();
+    await setupChannels(s.sound);
+    await scheduleAllNotifications(s);
+    if (next !== 'silent') playPreview(next);
   };
 
   const cycleTheme = () => {
