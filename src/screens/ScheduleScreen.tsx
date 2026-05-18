@@ -11,6 +11,7 @@ import { ChevL, Moon } from '../components/Icons';
 import { useTheme } from '../theme/ThemeContext';
 import { useSettingsStore } from '../store/settingsStore';
 import { scheduleAllNotifications } from '../notifications/scheduler';
+import { Toggle } from '../components/Toggle';
 import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Schedule'>;
@@ -29,36 +30,57 @@ export function ScheduleScreen() {
   const { t, fonts } = useTheme();
   const nav = useNavigation<Nav>();
 
-  const anchor1   = useSettingsStore(s => s.scheduleAnchor1);
-  const anchor2   = useSettingsStore(s => s.scheduleAnchor2);
-  const anchor3   = useSettingsStore(s => s.scheduleAnchor3);
-  const gratitude = useSettingsStore(s => s.scheduleGratitude);
-  const update    = useSettingsStore(s => s.update);
+  const anchor1        = useSettingsStore(s => s.scheduleAnchor1);
+  const anchor2        = useSettingsStore(s => s.scheduleAnchor2);
+  const anchor3        = useSettingsStore(s => s.scheduleAnchor3);
+  const gratitude      = useSettingsStore(s => s.scheduleGratitude);
+  const quietStart     = useSettingsStore(s => s.quietHoursStart);
+  const quietEnd       = useSettingsStore(s => s.quietHoursEnd);
+  const weekendMode    = useSettingsStore(s => s.weekendMode);
+  const update         = useSettingsStore(s => s.update);
 
   const anchors = [anchor1, anchor2, anchor3];
   const labels  = ['Morning', 'Midday', 'Evening'];
 
-  const [picking, setPicking] = useState<'anchor1' | 'anchor2' | 'anchor3' | 'gratitude' | null>(null);
+  const [picking, setPicking] = useState<'anchor1' | 'anchor2' | 'anchor3' | 'gratitude' | 'quietStart' | 'quietEnd' | null>(null);
 
   const handleChange = (_: unknown, date?: Date) => {
     if (date && picking) {
       const val = fromDate(date);
-      const key = picking === 'gratitude' ? 'scheduleGratitude'
-        : picking === 'anchor1' ? 'scheduleAnchor1'
-        : picking === 'anchor2' ? 'scheduleAnchor2'
-        : 'scheduleAnchor3';
-      update({ [key]: val }).then(() => {
-        scheduleAllNotifications(useSettingsStore.getState());
-      });
+      let partial: Parameters<typeof update>[0];
+      if      (picking === 'gratitude')   partial = { scheduleGratitude: val };
+      else if (picking === 'anchor1')     partial = { scheduleAnchor1: val };
+      else if (picking === 'anchor2')     partial = { scheduleAnchor2: val };
+      else if (picking === 'anchor3')     partial = { scheduleAnchor3: val };
+      else if (picking === 'quietStart')  partial = { quietHoursStart: val };
+      else                                partial = { quietHoursEnd: val };
+      update(partial).then(() => scheduleAllNotifications(useSettingsStore.getState()));
     }
     setPicking(null);
   };
 
-  const currentPickValue = picking === 'gratitude' ? gratitude
-    : picking === 'anchor1' ? anchor1
-    : picking === 'anchor2' ? anchor2
-    : picking === 'anchor3' ? anchor3
-    : anchor1;
+  const toggleQuietHours = () => {
+    if (quietStart) {
+      update({ quietHoursStart: null, quietHoursEnd: null })
+        .then(() => scheduleAllNotifications(useSettingsStore.getState()));
+    } else {
+      update({ quietHoursStart: '22:00', quietHoursEnd: '07:00' })
+        .then(() => scheduleAllNotifications(useSettingsStore.getState()));
+    }
+  };
+
+  const toggleWeekend = () => {
+    update({ weekendMode: !weekendMode });
+  };
+
+  const currentPickValue =
+    picking === 'gratitude'  ? gratitude :
+    picking === 'anchor1'    ? anchor1   :
+    picking === 'anchor2'    ? anchor2   :
+    picking === 'anchor3'    ? anchor3   :
+    picking === 'quietStart' ? (quietStart ?? '22:00') :
+    picking === 'quietEnd'   ? (quietEnd  ?? '07:00')  :
+    anchor1;
 
   // Timeline: 6 AM to 10 PM = 16 hours
   const timelinePct = (hhmm: string) => {
@@ -131,9 +153,27 @@ export function ScheduleScreen() {
 
         {/* Other settings */}
         <Card padding={0}>
-          <PressableRow label="Quiet hours"   value="Off"          topBorder={false}/>
-          <PressableRow label="Weekends"      value="Lighter schedule"/>
-          <PressableRow label="Repeat sound"  value="Soft bell"/>
+          <View style={[s.toggleRow, { borderBottomWidth: 1, borderBottomColor: t.hairline }]}>
+            <Text style={[s.toggleLabel, { color: t.ink, fontFamily: fonts.sansMedium }]}>Quiet hours</Text>
+            <Toggle on={!!quietStart} onToggle={toggleQuietHours}/>
+          </View>
+          {quietStart && (
+            <View style={[s.quietPickers, { borderBottomWidth: 1, borderBottomColor: t.hairline }]}>
+              <Pressable style={s.quietTime} onPress={() => setPicking('quietStart')}>
+                <Text style={[s.quietTimeLabel, { color: t.muted, fontFamily: fonts.mono }]}>From</Text>
+                <Text style={[s.quietTimeVal, { color: t.ink, fontFamily: fonts.mono }]}>{quietStart}</Text>
+              </Pressable>
+              <View style={[s.quietDivider, { backgroundColor: t.divider }]}/>
+              <Pressable style={s.quietTime} onPress={() => setPicking('quietEnd')}>
+                <Text style={[s.quietTimeLabel, { color: t.muted, fontFamily: fonts.mono }]}>To</Text>
+                <Text style={[s.quietTimeVal, { color: t.ink, fontFamily: fonts.mono }]}>{quietEnd}</Text>
+              </Pressable>
+            </View>
+          )}
+          <View style={s.toggleRow}>
+            <Text style={[s.toggleLabel, { color: t.ink, fontFamily: fonts.sansMedium }]}>Lighter weekends</Text>
+            <Toggle on={weekendMode} onToggle={toggleWeekend}/>
+          </View>
         </Card>
       </ScrollView>
 
@@ -169,4 +209,11 @@ const s = StyleSheet.create({
   gratIcon:       { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   gratTime:       { fontSize: 22 },
   gratSub:        { fontSize: 12, marginTop: 2 },
+  toggleRow:      { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 13 },
+  toggleLabel:    { flex: 1, fontSize: 14 },
+  quietPickers:   { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10 },
+  quietTime:      { flex: 1, alignItems: 'center', gap: 2 },
+  quietTimeLabel: { fontSize: 10, letterSpacing: 0.5 },
+  quietTimeVal:   { fontSize: 18 },
+  quietDivider:   { width: 1, height: 28, marginHorizontal: 12 },
 });

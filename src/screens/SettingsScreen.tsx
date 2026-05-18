@@ -9,30 +9,45 @@ import { Eyebrow, Display, DisplayItalic } from '../components/Typography';
 import { ChevL } from '../components/Icons';
 import { useTheme } from '../theme/ThemeContext';
 import { useSettingsStore } from '../store/settingsStore';
-import { useStatsStore } from '../store/statsStore';
+import type { UserSettings } from '../types';
 import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Settings'>;
 
-function practicingSince(): string {
-  // Placeholder — will use real onboarding date in Phase 6
-  return 'Practicing daily';
-}
+const SOUND_CYCLE: UserSettings['sound'][]  = ['bell', 'chime', 'silent'];
+const THEME_CYCLE: UserSettings['theme'][]  = ['auto', 'light', 'dark'];
+
+const SOUND_LABEL: Record<UserSettings['sound'], string> = {
+  bell: 'Soft bell', chime: 'Chime', silent: 'Silent',
+};
+const THEME_LABEL: Record<UserSettings['theme'], string> = {
+  auto: 'System', light: 'Cream', dark: 'Dark',
+};
 
 export function SettingsScreen() {
   const { t, fonts } = useTheme();
   const nav = useNavigation<Nav>();
 
-  const name   = useSettingsStore(s => s.name);
-  const sound  = useSettingsStore(s => s.sound);
-  const theme  = useSettingsStore(s => s.theme);
+  const name    = useSettingsStore(s => s.name);
+  const sound   = useSettingsStore(s => s.sound);
+  const theme   = useSettingsStore(s => s.theme);
   const anchor1 = useSettingsStore(s => s.scheduleAnchor1);
   const anchor2 = useSettingsStore(s => s.scheduleAnchor2);
   const anchor3 = useSettingsStore(s => s.scheduleAnchor3);
-  const gratitude = useSettingsStore(s => s.scheduleGratitude);
+  const update  = useSettingsStore(s => s.update);
 
   const scheduleValue = `${anchor1} · ${anchor2} · ${anchor3}`;
   const initials = (name || '?')[0].toUpperCase();
+
+  const cycleSound = () => {
+    const next = SOUND_CYCLE[(SOUND_CYCLE.indexOf(sound) + 1) % SOUND_CYCLE.length];
+    update({ sound: next });
+  };
+
+  const cycleTheme = () => {
+    const next = THEME_CYCLE[(THEME_CYCLE.indexOf(theme) + 1) % THEME_CYCLE.length];
+    update({ theme: next });
+  };
 
   return (
     <Screen>
@@ -77,12 +92,14 @@ export function SettingsScreen() {
         <Card padding={0} style={{ marginBottom: 20 }}>
           <PressableRow
             label="Sound"
-            value={sound === 'bell' ? 'Soft bell' : sound === 'chime' ? 'Chime' : 'Silent'}
+            value={SOUND_LABEL[sound]}
             topBorder={false}
+            onPress={cycleSound}
           />
           <PressableRow
             label="Theme"
-            value={theme === 'auto' ? 'System' : theme === 'light' ? 'Cream' : 'Dark'}
+            value={THEME_LABEL[theme]}
+            onPress={cycleTheme}
           />
         </Card>
 
