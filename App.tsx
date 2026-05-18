@@ -74,12 +74,12 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-function AppNavigator() {
+function AppNavigator({ initialRoute }: { initialRoute: keyof RootStackParamList }) {
   const { t } = useTheme();
   return (
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
-        initialRouteName="Today"
+        initialRouteName={initialRoute}
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: t.bg },
@@ -123,6 +123,7 @@ export default function App() {
   const loadStats        = useStatsStore(s => s.load);
 
   const [storesReady, setStoresReady] = useState(false);
+  const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList>('Today');
   const responseListenerRef = useRef<Notifications.EventSubscription | null>(null);
 
   useEffect(() => {
@@ -133,6 +134,7 @@ export default function App() {
       const settings = await loadSettings().then(() => useSettingsStore.getState());
       await Promise.all([loadAffirmations(), loadJournal(), loadStats()]);
       await scheduleAllNotifications(settings);
+      setInitialRoute(settings.onboardingComplete ? 'Today' : 'OnboardingWelcome');
       setStoresReady(true);
     })();
   }, [fontsLoaded]);
@@ -161,7 +163,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <AppNavigator/>
+        <AppNavigator initialRoute={initialRoute}/>
       </ThemeProvider>
     </SafeAreaProvider>
   );

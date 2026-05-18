@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, Pressable, StyleSheet, Animated, Easing } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '../components/Screen';
@@ -12,6 +12,15 @@ import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'AffirmationMoment'>;
 
+const INHALE = 4;
+const HOLD   = 4;
+const EXHALE = 6;
+const CYCLE  = INHALE + HOLD + EXHALE; // 14s
+
+function formatTime(secs: number): string {
+  return `0:${String(secs).padStart(2, '0')}`;
+}
+
 export function AffirmationMomentScreen() {
   const { t, fonts } = useTheme();
   const nav = useNavigation<Nav>();
@@ -21,8 +30,42 @@ export function AffirmationMomentScreen() {
   const markSeen          = useAffirmationStore(s => s.markSeen);
   const recordCompletion  = useStatsStore(s => s.recordCompletion);
 
-  const affText = activeAffirmation?.text ?? '';
-  const dashIdx = affText.indexOf(' — ');
+  const breathAnim = useRef(new Animated.Value(0)).current;
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.timing(breathAnim, {
+        toValue: CYCLE,
+        duration: CYCLE * 1000,
+        easing: Easing.linear,
+        useNativeDriver: false,
+      }),
+    );
+    animation.start();
+
+    const interval = setInterval(() => {
+      setElapsed(prev => (prev + 1) % CYCLE);
+    }, 1000);
+
+    return () => {
+      animation.stop();
+      clearInterval(interval);
+    };
+  }, []);
+
+  const fillWidth = breathAnim.interpolate({
+    inputRange: [0, INHALE, INHALE + HOLD, CYCLE],
+    outputRange: ['0%', '100%', '100%', '0%'],
+  });
+
+  const breathPhase =
+    elapsed < INHALE             ? 'Breathe in'  :
+    elapsed < INHALE + HOLD      ? 'Hold'         :
+                                   'Breathe out';
+
+  const affText   = activeAffirmation?.text ?? '';
+  const dashIdx   = affText.indexOf(' — ');
   const italicPart = dashIdx > -1 ? affText.slice(0, dashIdx) : '';
   const restPart   = dashIdx > -1 ? affText.slice(dashIdx) : affText;
 
@@ -60,15 +103,17 @@ export function AffirmationMomentScreen() {
             ) : restPart}
           </Text>
 
-          {/* Breathing bar — static for Phase 3, animated in Phase 5 */}
+          {/* Breathing bar */}
           <View style={s.breathRow}>
-            <Text style={[s.breathTimer, { color: t.muted, fontFamily: fonts.mono }]}>0:00 / 0:12</Text>
+            <Text style={[s.breathTimer, { color: t.muted, fontFamily: fonts.mono }]}>
+              {formatTime(elapsed)} / {formatTime(CYCLE)}
+            </Text>
             <View style={[s.breathTrack, { backgroundColor: t.divider }]}>
-              <View style={[s.breathFill, { backgroundColor: t.terra, width: '0%' }]}/>
+              <Animated.View style={[s.breathFill, { backgroundColor: t.terra, width: fillWidth }]}/>
             </View>
           </View>
           <Text style={[s.breathHint, { color: t.muted, fontFamily: fonts.display }]}>
-            Breathe in for 4 · hold for 4 · out for 6
+            {breathPhase} · {INHALE}s in · {HOLD}s hold · {EXHALE}s out
           </Text>
         </View>
 
@@ -94,18 +139,18 @@ export function AffirmationMomentScreen() {
 }
 
 const s = StyleSheet.create({
-  root:       { flex: 1, paddingHorizontal: 26, paddingBottom: 20 },
-  navBar:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12 },
-  center:     { flex: 1, justifyContent: 'center' },
-  affText:    { fontSize: 38, lineHeight: 46, letterSpacing: -0.6 },
-  breathRow:  { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 26 },
-  breathTimer:{ fontSize: 12, letterSpacing: 0.5 },
-  breathTrack:{ flex: 1, height: 2, borderRadius: 1 },
-  breathFill: { height: '100%', borderRadius: 1 },
-  breathHint: { fontSize: 13, fontStyle: 'italic', marginTop: 8 },
-  actions:    { flexDirection: 'row', gap: 10 },
-  saveBtn:    { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 14, borderRadius: 14, borderWidth: 1 },
-  saveBtnText:{ fontSize: 14 },
-  feltBtn:    { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 14, borderRadius: 14 },
-  feltBtnText:{ fontSize: 14, color: '#fff' },
+  root:        { flex: 1, paddingHorizontal: 26, paddingBottom: 20 },
+  navBar:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12 },
+  center:      { flex: 1, justifyContent: 'center' },
+  affText:     { fontSize: 38, lineHeight: 46, letterSpacing: -0.6 },
+  breathRow:   { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 26 },
+  breathTimer: { fontSize: 12, letterSpacing: 0.5, width: 52 },
+  breathTrack: { flex: 1, height: 2, borderRadius: 1 },
+  breathFill:  { height: '100%', borderRadius: 1 },
+  breathHint:  { fontSize: 13, fontStyle: 'italic', marginTop: 8 },
+  actions:     { flexDirection: 'row', gap: 10 },
+  saveBtn:     { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 14, borderRadius: 14, borderWidth: 1 },
+  saveBtnText: { fontSize: 14 },
+  feltBtn:     { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 14, borderRadius: 14 },
+  feltBtnText: { fontSize: 14, color: '#fff' },
 });
