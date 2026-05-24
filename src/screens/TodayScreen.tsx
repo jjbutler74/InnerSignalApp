@@ -6,7 +6,7 @@ import { Screen } from '../components/Screen';
 import { Card } from '../components/Card';
 import { Chip } from '../components/Chip';
 import { Eyebrow, Display, DisplayItalic } from '../components/Typography';
-import { SignalMark, Leaf, Settings, Sun, Bolt, Moon, Heart, Flame, More } from '../components/Icons';
+import { SignalMark, Leaf, Settings, Sun, Bolt, Moon, Heart, Flame } from '../components/Icons';
 import { useTheme } from '../theme/ThemeContext';
 import { useSettingsStore } from '../store/settingsStore';
 import { useAffirmationStore } from '../store/affirmationStore';
@@ -139,7 +139,6 @@ export function TodayScreen() {
         <Card style={{ marginBottom: 12 }}>
           <View style={s.cardHeader}>
             <Eyebrow style={{ color: t.sage }}>Today's affirmation</Eyebrow>
-            <Pressable><More size={18} color={t.muted}/></Pressable>
           </View>
           <Display style={{ fontSize: 22, lineHeight: 28, marginTop: 4 }}>
             {affText}
