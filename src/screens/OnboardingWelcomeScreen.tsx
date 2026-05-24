@@ -56,9 +56,6 @@ export function OnboardingWelcomeScreen() {
             <Text style={[s.primaryBtnText, { color: t.bg, fontFamily: fonts.sansMedium }]}>Begin</Text>
             <ChevR size={16} color={t.bg}/>
           </Pressable>
-          <Pressable style={s.ghostBtn}>
-            <Text style={[s.ghostBtnText, { color: t.muted, fontFamily: fonts.sans }]}>I already have an account</Text>
-          </Pressable>
         </View>
       </View>
     </Screen>
@@ -79,6 +76,4 @@ const s = StyleSheet.create({
   ctas:         { gap: 10 },
   primaryBtn:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, borderRadius: 14 },
   primaryBtnText:{ fontSize: 15 },
-  ghostBtn:     { alignItems: 'center', paddingVertical: 12 },
-  ghostBtnText: { fontSize: 14 },
 });

@@ -146,13 +146,6 @@ export function SettingsScreen() {
           />
         </Card>
 
-        {/* Privacy */}
-        <Eyebrow style={{ marginBottom: 8 }}>Privacy</Eyebrow>
-        <Card padding={0} style={{ marginBottom: 20 }}>
-          <PressableRow label="Lock journal"  value="Face Unlock"    topBorder={false}/>
-          <PressableRow label="Export"        value="PDF · JSON"/>
-        </Card>
-
         {/* Recap shortcut */}
         <Pressable
           style={[s.recapBtn, { borderColor: t.hairline }]}
