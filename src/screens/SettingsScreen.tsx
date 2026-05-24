@@ -38,7 +38,8 @@ export function SettingsScreen() {
   const { t, fonts } = useTheme();
   const nav = useNavigation<Nav>();
 
-  const streakDays = useStatsStore(s => s.streakDays);
+  const streakDays  = useStatsStore(s => s.streakDays);
+  const activePacks = useAffirmationStore(s => s.packs.filter(p => p.isActive).length);
   const name    = useSettingsStore(s => s.name);
   const sound   = useSettingsStore(s => s.sound);
   const theme   = useSettingsStore(s => s.theme);
@@ -125,7 +126,7 @@ export function SettingsScreen() {
           />
           <PressableRow
             label="Affirmation packs"
-            value={`${5} active`}
+            value={`${activePacks} active`}
             onPress={() => nav.navigate('AffirmationLibrary')}
           />
         </Card>
