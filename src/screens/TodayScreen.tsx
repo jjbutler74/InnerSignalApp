@@ -6,7 +6,7 @@ import { Screen } from '../components/Screen';
 import { Card } from '../components/Card';
 import { Chip } from '../components/Chip';
 import { Eyebrow, Display, DisplayItalic } from '../components/Typography';
-import { Leaf, Settings, Sun, Bolt, Moon, Heart, Flame, More } from '../components/Icons';
+import { SignalMark, Leaf, Settings, Sun, Bolt, Moon, Heart, Flame, More } from '../components/Icons';
 import { useTheme } from '../theme/ThemeContext';
 import { useSettingsStore } from '../store/settingsStore';
 import { useAffirmationStore } from '../store/affirmationStore';
@@ -105,7 +105,7 @@ export function TodayScreen() {
       <View style={s.header}>
         <View style={s.headerLeft}>
           <View style={[s.logoBox, { backgroundColor: t.sage }]}>
-            <Leaf size={16} color="#fff"/>
+            <SignalMark size={16} color="#fff"/>
           </View>
           <Text style={[s.logoText, { color: t.ink, fontFamily: fonts.sansMedium }]}>InnerSignal</Text>
         </View>

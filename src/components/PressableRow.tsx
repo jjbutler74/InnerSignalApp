@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, View, Text, StyleSheet } from 'react-native';
+import { Pressable, View, Text, StyleSheet, TextStyle } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { ChevR } from './Icons';
 
@@ -8,9 +8,10 @@ interface PressableRowProps {
   value?: string;
   onPress?: () => void;
   topBorder?: boolean;
+  valueStyle?: TextStyle;
 }
 
-export function PressableRow({ label, value, onPress, topBorder = true }: PressableRowProps) {
+export function PressableRow({ label, value, onPress, topBorder = true, valueStyle }: PressableRowProps) {
   const { t, fonts } = useTheme();
   return (
     <Pressable
@@ -23,7 +24,7 @@ export function PressableRow({ label, value, onPress, topBorder = true }: Pressa
     >
       <Text style={[styles.label, { color: t.ink, fontFamily: fonts.sansMedium }]}>{label}</Text>
       {value ? (
-        <Text style={[styles.value, { color: t.muted, fontFamily: fonts.sans }]}>{value}</Text>
+        <Text style={[styles.value, { color: t.muted, fontFamily: fonts.sans }, valueStyle]}>{value}</Text>
       ) : null}
       <ChevR size={14} color={t.soft}/>
     </Pressable>

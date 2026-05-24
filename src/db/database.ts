@@ -56,6 +56,16 @@ async function migrate(db: SQLite.SQLiteDatabase) {
   `);
 }
 
+export async function resetDatabase(): Promise<void> {
+  const db = await getDb();
+  await db.execAsync(`
+    DELETE FROM journal_entries;
+    DELETE FROM completions;
+    DELETE FROM settings;
+    UPDATE affirmations SET seen_count = 0, is_favorite = 0;
+  `);
+}
+
 export function uid(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }

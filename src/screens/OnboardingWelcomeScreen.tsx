@@ -3,7 +3,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '../components/Screen';
-import { Leaf, ChevR } from '../components/Icons';
+import { SignalMark, ChevR } from '../components/Icons';
 import { Eyebrow, Display, DisplayItalic } from '../components/Typography';
 import { useTheme } from '../theme/ThemeContext';
 import type { RootStackParamList } from '../../App';
@@ -21,7 +21,7 @@ export function OnboardingWelcomeScreen() {
         <View style={s.topBar}>
           <View style={s.logoRow}>
             <View style={[s.logoBox, { backgroundColor: t.sage }]}>
-              <Leaf size={14} color="#fff"/>
+              <SignalMark size={14} color="#fff"/>
             </View>
             <Text style={[s.logoText, { color: t.ink, fontFamily: fonts.sansMedium }]}>InnerSignal</Text>
           </View>

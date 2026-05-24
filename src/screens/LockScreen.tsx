@@ -3,7 +3,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { DarkScreen } from '../components/Screen';
-import { Leaf } from '../components/Icons';
+import { SignalMark } from '../components/Icons';
 import { Eyebrow } from '../components/Typography';
 import { useTheme } from '../theme/ThemeContext';
 import { useAffirmationStore } from '../store/affirmationStore';
@@ -46,7 +46,7 @@ export function LockScreen() {
 
         <View style={s.card}>
           <View style={s.cardHeader}>
-            <View style={s.appIcon}><Leaf size={11} color="#fff"/></View>
+            <View style={s.appIcon}><SignalMark size={11} color="#fff"/></View>
             <Text style={[s.appName, { fontFamily: fonts.sansMedium }]}>InnerSignal</Text>
             <Text style={[s.cardTime, { fontFamily: fonts.sans }]}>now</Text>
           </View>
@@ -76,7 +76,7 @@ const CREAM = '#F2EDE2';
 const INK   = '#2A211B';
 
 const s = StyleSheet.create({
-  root:            { flex: 1, paddingHorizontal: 22, paddingTop: 48 },
+  root:            { flex: 1, paddingHorizontal: 22 },
   clockBlock:      { alignItems: 'center', marginTop: 18 },
   clockTime:       { fontSize: 64, lineHeight: 68, letterSpacing: -2.5, color: CREAM, fontWeight: '300' },
   clockDate:       { fontSize: 14, color: 'rgba(242,237,226,0.7)', marginTop: 6 },

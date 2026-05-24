@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { setupChannels } from '../notifications/channels';
 import { scheduleAllNotifications } from '../notifications/scheduler';
@@ -11,9 +11,14 @@ import { Card } from '../components/Card';
 import { PressableRow } from '../components/PressableRow';
 import { Eyebrow, Display, DisplayItalic } from '../components/Typography';
 import { ChevL } from '../components/Icons';
+import { CommonActions } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
 import { useSettingsStore } from '../store/settingsStore';
+import { useAffirmationStore } from '../store/affirmationStore';
+import { useJournalStore } from '../store/journalStore';
 import { useStatsStore } from '../store/statsStore';
+import { resetDatabase } from '../db/database';
+import { DEFAULT_SETTINGS } from '../types';
 import type { UserSettings } from '../types';
 import type { RootStackParamList } from '../../App';
 
@@ -59,6 +64,30 @@ export function SettingsScreen() {
     Haptics.selectionAsync();
     const next = THEME_CYCLE[(THEME_CYCLE.indexOf(theme) + 1) % THEME_CYCLE.length];
     update({ theme: next });
+  };
+
+  const handleReset = () => {
+    Alert.alert(
+      'Start fresh?',
+      'Your journal entries, streak, and settings will be cleared. Affirmations stay. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset app',
+          style: 'destructive',
+          onPress: async () => {
+            await resetDatabase();
+            useSettingsStore.setState({ ...DEFAULT_SETTINGS, loaded: true });
+            await Promise.all([
+              useAffirmationStore.getState().load(),
+              useJournalStore.getState().load(),
+              useStatsStore.getState().load(),
+            ]);
+            nav.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'OnboardingWelcome' }] }));
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -133,6 +162,18 @@ export function SettingsScreen() {
             View <DisplayItalic style={{ fontSize: 15 }}>weekly recap</DisplayItalic> →
           </Display>
         </Pressable>
+
+        {/* Danger zone */}
+        <Eyebrow style={{ marginTop: 32, marginBottom: 8 }}>Account</Eyebrow>
+        <Card padding={0} style={{ marginBottom: 20 }}>
+          <PressableRow
+            label="Start fresh"
+            value="Reset app"
+            topBorder={false}
+            onPress={handleReset}
+            valueStyle={{ color: '#C0392B' }}
+          />
+        </Card>
       </ScrollView>
     </Screen>
   );

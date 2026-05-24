@@ -154,8 +154,8 @@ export default function App() {
 
   if (!fontsLoaded || !storesReady) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F2EDE2' }}>
-        <ActivityIndicator color="#6F8169"/>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1A2B4A' }}>
+        <ActivityIndicator color="#D4A24C"/>
       </View>
     );
   }

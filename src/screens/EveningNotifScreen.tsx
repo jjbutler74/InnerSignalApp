@@ -67,7 +67,7 @@ const CREAM = '#F2EDE2';
 const INK   = '#2A211B';
 
 const s = StyleSheet.create({
-  root:            { flex: 1, paddingHorizontal: 22, paddingTop: 48 },
+  root:            { flex: 1, paddingHorizontal: 22 },
   clockBlock:      { alignItems: 'center', marginTop: 18 },
   clockTime:       { fontSize: 64, lineHeight: 68, letterSpacing: -2.5, color: CREAM, fontWeight: '300' },
   clockDate:       { fontSize: 14, color: 'rgba(242,237,226,0.7)', marginTop: 6 },

@@ -6,6 +6,23 @@ interface IconProps {
   color: string;
 }
 
+// Three concentric 110° arcs pointing upward + origin dot — the InnerSignal brand mark
+export function SignalMark({ size = 20, color }: IconProps) {
+  const cx = 10, cy = 15;
+  const path = [3, 6, 9].map(r => {
+    const x1 = (cx - 0.819 * r).toFixed(2);
+    const x2 = (cx + 0.819 * r).toFixed(2);
+    const y  = (cy - 0.574 * r).toFixed(2);
+    return `M ${x1},${y} A ${r},${r} 0 0,0 ${x2},${y}`;
+  }).join(' ');
+  return (
+    <Svg width={size} height={size} viewBox="0 0 20 20" fill="none">
+      <Path d={path} stroke={color} strokeWidth={1.5} strokeLinecap="round"/>
+      <Circle cx={cx} cy={cy} r={1} fill={color}/>
+    </Svg>
+  );
+}
+
 export function Leaf({ size = 20, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 20 20" fill="none">
