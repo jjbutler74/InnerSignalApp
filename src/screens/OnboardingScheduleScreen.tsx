@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Screen } from '../components/Screen';
@@ -49,6 +49,9 @@ export function OnboardingScheduleScreen() {
     { key: 'gratitude' as const, label: 'Evening gratitude', Icon: Moon, color: t.night },
   ];
 
+  const goToApp = () =>
+    nav.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Lock' }] }));
+
   const handleGetStarted = async () => {
     await update({
       scheduleAnchor1: times.anchor1,
@@ -63,11 +66,11 @@ export function OnboardingScheduleScreen() {
       Alert.alert(
         'Notifications off',
         'You can enable them later in Settings → InnerSignal to receive your anchors.',
-        [{ text: 'OK', onPress: () => nav.navigate('Today') }],
+        [{ text: 'OK', onPress: goToApp }],
       );
     } else {
       await scheduleAllNotifications(useSettingsStore.getState());
-      nav.navigate('Today');
+      goToApp();
     }
   };
 

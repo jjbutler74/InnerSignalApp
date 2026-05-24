@@ -19,7 +19,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#F2EDE2"
+        "backgroundColor": "#1A2B4A"
       },
       "package": "com.innersignal.app",
       "edgeToEdgeEnabled": true,
