@@ -35,7 +35,10 @@ export function Leaf({ size = 20, color }: IconProps) {
 export function Moon({ size = 20, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 20 20" fill="none">
-      <Path d="M17 14A7 7 0 016 3a7 7 0 000 14 7 7 0 0011-3z" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"/>
+      <Path
+        d="M11.1,3.7 A7,7 0 0,1 15.9,13.3 A5.5,5.5 0 0,0 11.1,3.7 Z"
+        stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"
+      />
     </Svg>
   );
 }
