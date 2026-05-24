@@ -7,6 +7,8 @@ import { SignalMark } from '../components/Icons';
 import { Eyebrow } from '../components/Typography';
 import { useTheme } from '../theme/ThemeContext';
 import { useAffirmationStore } from '../store/affirmationStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { snoozeAffirmationNotification } from '../notifications/scheduler';
 import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Lock'>;
@@ -28,6 +30,14 @@ export function LockScreen() {
     const id = setInterval(() => setTime(clockTime()), 10000);
     return () => clearInterval(id);
   }, []);
+
+  const [snoozed, setSnoozed] = useState(false);
+  const handleSnooze = async () => {
+    if (snoozed) return;
+    setSnoozed(true);
+    await snoozeAffirmationNotification(useSettingsStore.getState());
+    nav.navigate('Today');
+  };
 
   const affText = activeAffirmation?.text ?? '';
   const dashIdx = affText.indexOf(' — ');
@@ -59,8 +69,10 @@ export function LockScreen() {
             <Pressable style={s.primaryBtn} onPress={() => nav.navigate('AffirmationMoment')}>
               <Text style={[s.primaryBtnText, { fontFamily: fonts.sansMedium }]}>Read & breathe</Text>
             </Pressable>
-            <Pressable style={s.secondaryBtn}>
-              <Text style={[s.secondaryBtnText, { fontFamily: fonts.sansMedium }]}>Snooze 1h</Text>
+            <Pressable style={s.secondaryBtn} onPress={handleSnooze} disabled={snoozed}>
+              <Text style={[s.secondaryBtnText, { fontFamily: fonts.sansMedium }]}>
+                {snoozed ? 'Snoozed ✓' : 'Snooze 1h'}
+              </Text>
             </Pressable>
           </View>
         </View>

@@ -92,6 +92,25 @@ export async function scheduleAllNotifications(settings: UserSettings): Promise<
   }
 }
 
+export async function snoozeAffirmationNotification(settings: UserSettings): Promise<void> {
+  const { status } = await Notifications.getPermissionsAsync();
+  if (status !== 'granted') return;
+
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'Ready when you are',
+      body: 'Your affirmation is still waiting.',
+      data: { slot: 'anchor1' },
+      sound: settings.sound === 'silent' ? false : settings.sound,
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: 3600,
+      channelId: 'midday-affirmation',
+    },
+  });
+}
+
 export async function cancelAllNotifications(): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
