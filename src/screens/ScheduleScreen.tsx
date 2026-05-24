@@ -70,7 +70,8 @@ export function ScheduleScreen() {
   };
 
   const toggleWeekend = () => {
-    update({ weekendMode: !weekendMode });
+    update({ weekendMode: !weekendMode })
+      .then(() => scheduleAllNotifications(useSettingsStore.getState()));
   };
 
   const currentPickValue =

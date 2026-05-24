@@ -61,6 +61,11 @@ function isInQuietHours(
   return s > e ? t >= s || t < e : t >= s && t < e;
 }
 
+// anchor2 + anchor3 are skipped on weekends when weekendMode is on
+const WEEKEND_REDUCED = new Set(['anchor2', 'anchor3']);
+// Mon–Fri in Expo's 1-indexed weekday system (1=Sun … 7=Sat)
+const WEEKDAYS = [2, 3, 4, 5, 6] as const;
+
 export async function scheduleAllNotifications(settings: UserSettings): Promise<void> {
   const { status } = await Notifications.getPermissionsAsync();
   if (status !== 'granted') return;
@@ -75,20 +80,37 @@ export async function scheduleAllNotifications(settings: UserSettings): Promise<
     }
 
     const { hour, minute } = parseHHMM(cfg.time);
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: cfg.title,
-        body: cfg.body,
-        data: { slot: cfg.slot },
-        sound: settings.sound === 'silent' ? false : settings.sound,
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour,
-        minute,
-        channelId: cfg.channelId,
-      },
-    });
+    const content = {
+      title: cfg.title,
+      body: cfg.body,
+      data: { slot: cfg.slot },
+      sound: settings.sound === 'silent' ? false : settings.sound,
+    };
+
+    if (settings.weekendMode && WEEKEND_REDUCED.has(cfg.slot)) {
+      for (const weekday of WEEKDAYS) {
+        await Notifications.scheduleNotificationAsync({
+          content,
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+            weekday,
+            hour,
+            minute,
+            channelId: cfg.channelId,
+          },
+        });
+      }
+    } else {
+      await Notifications.scheduleNotificationAsync({
+        content,
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
+          hour,
+          minute,
+          channelId: cfg.channelId,
+        },
+      });
+    }
   }
 }
 
