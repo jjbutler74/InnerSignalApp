@@ -1,17 +1,26 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Animated, Easing } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { Screen } from '../components/Screen';
 import { Close, Heart, Check } from '../components/Icons';
 import { Eyebrow } from '../components/Typography';
 import { useTheme } from '../theme/ThemeContext';
 import { useAffirmationStore } from '../store/affirmationStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { useStatsStore } from '../store/statsStore';
 import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'AffirmationMoment'>;
+type Route = RouteProp<RootStackParamList, 'AffirmationMoment'>;
+
+const SLOT_LABEL: Record<'anchor1' | 'anchor2' | 'anchor3', string> = {
+  anchor1: 'Morning anchor',
+  anchor2: 'Midday reset',
+  anchor3: 'Evening pause',
+};
 
 const INHALE = 4;
 const HOLD   = 4;
@@ -24,12 +33,20 @@ function formatTime(secs: number): string {
 
 export function AffirmationMomentScreen() {
   const { t, fonts } = useTheme();
-  const nav = useNavigation<Nav>();
+  const nav   = useNavigation<Nav>();
+  const route = useRoute<Route>();
+  const { slot } = route.params;
 
   const activeAffirmation = useAffirmationStore(s => s.activeAffirmation);
   const toggleFavorite    = useAffirmationStore(s => s.toggleFavorite);
   const markSeen          = useAffirmationStore(s => s.markSeen);
   const recordCompletion  = useStatsStore(s => s.recordCompletion);
+
+  const slotTime = useSettingsStore(s =>
+    slot === 'anchor1' ? s.scheduleAnchor1 :
+    slot === 'anchor2' ? s.scheduleAnchor2 :
+                         s.scheduleAnchor3
+  );
 
   const breathAnim = useRef(new Animated.Value(0)).current;
   const [elapsed, setElapsed] = useState(0);
@@ -74,7 +91,7 @@ export function AffirmationMomentScreen() {
     if (!activeAffirmation) return;
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     await markSeen(activeAffirmation.id);
-    await recordCompletion(activeAffirmation.id, 'anchor1');
+    await recordCompletion(activeAffirmation.id, slot);
     nav.goBack();
   };
 
@@ -92,7 +109,7 @@ export function AffirmationMomentScreen() {
           <Pressable onPress={() => nav.goBack()}>
             <Close size={22} color={t.muted}/>
           </Pressable>
-          <Eyebrow style={{ color: t.sage }}>Midday anchor · 12:30</Eyebrow>
+          <Eyebrow style={{ color: t.sage }}>{SLOT_LABEL[slot]} · {slotTime}</Eyebrow>
           <View style={{ width: 22 }}/>
         </View>
 

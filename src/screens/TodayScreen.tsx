@@ -62,10 +62,10 @@ export function TodayScreen() {
   const toMins = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
 
   const schedule = [
-    { time: scheduleAnchor1,  title: 'Morning anchor', sub: 'Set the tone',  tone: 'sage'  },
-    { time: scheduleAnchor2,  title: 'Midday reset',   sub: 'Coming up',     tone: 'terra' },
-    { time: scheduleAnchor3,  title: 'Evening pause',  sub: 'Tonight',       tone: 'amber' },
-    { time: scheduleGratitude, title: 'Gratitude',      sub: '3 things',      tone: 'night' },
+    { time: scheduleAnchor1,   title: 'Morning anchor', sub: 'Set the tone', tone: 'sage',  slot: 'anchor1'   as const },
+    { time: scheduleAnchor2,   title: 'Midday reset',   sub: 'Coming up',   tone: 'terra', slot: 'anchor2'   as const },
+    { time: scheduleAnchor3,   title: 'Evening pause',  sub: 'Tonight',     tone: 'amber', slot: 'anchor3'   as const },
+    { time: scheduleGratitude, title: 'Gratitude',      sub: '3 things',    tone: 'night', slot: 'gratitude' as const },
   ] as const;
 
   const statusOf = (time: string) => {
@@ -153,7 +153,7 @@ export function TodayScreen() {
                 {isFav ? 'Saved' : 'Save to favorites'}
               </Text>
             </Pressable>
-            <Pressable onPress={() => nav.navigate('AffirmationMoment')}>
+            <Pressable onPress={() => nav.navigate('AffirmationMoment', { slot: 'anchor1' })}>
               <Text style={[s.ghostBtn, { color: t.muted, fontFamily: fonts.sansMedium }]}>Read & breathe</Text>
             </Pressable>
           </View>
@@ -166,7 +166,7 @@ export function TodayScreen() {
             return (
               <Pressable
                 key={item.time}
-                onPress={status === 'next' ? () => nav.navigate('AffirmationMoment') : undefined}
+                onPress={status === 'next' ? () => item.slot === 'gratitude' ? nav.navigate('EveningNotif') : nav.navigate('AffirmationMoment', { slot: item.slot }) : undefined}
                 style={[s.scheduleRow, i > 0 && { borderTopWidth: 1, borderTopColor: t.hairline }]}
               >
                 <View style={[s.scheduleIcon, {

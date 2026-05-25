@@ -52,19 +52,19 @@ export function SettingsScreen() {
   const initials = (name || '?')[0].toUpperCase();
 
   const cycleSound = async () => {
-    Haptics.selectionAsync();
+    await Haptics.selectionAsync();
     const next = SOUND_CYCLE[(SOUND_CYCLE.indexOf(sound) + 1) % SOUND_CYCLE.length];
     await update({ sound: next });
     const s = useSettingsStore.getState();
     await setupChannels(s.sound);
     await scheduleAllNotifications(s);
-    if (next !== 'silent') playPreview(next);
+    if (next !== 'silent') await playPreview(next);
   };
 
-  const cycleTheme = () => {
-    Haptics.selectionAsync();
+  const cycleTheme = async () => {
+    await Haptics.selectionAsync();
     const next = THEME_CYCLE[(THEME_CYCLE.indexOf(theme) + 1) % THEME_CYCLE.length];
-    update({ theme: next });
+    await update({ theme: next });
   };
 
   const handleReset = () => {

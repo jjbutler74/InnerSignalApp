@@ -57,14 +57,18 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
   },
 
   toggleFavorite: async (id) => {
-    const { affirmations } = get();
+    const { affirmations, activeAffirmation } = get();
     const aff = affirmations.find(a => a.id === id);
     if (!aff) return;
     await toggleFavorite(id, aff.isFavorite);
+    const newFav = !aff.isFavorite;
     set({
       affirmations: affirmations.map(a =>
-        a.id === id ? { ...a, isFavorite: !a.isFavorite } : a,
+        a.id === id ? { ...a, isFavorite: newFav } : a,
       ),
+      activeAffirmation: activeAffirmation?.id === id
+        ? { ...activeAffirmation, isFavorite: newFav }
+        : activeAffirmation,
     });
   },
 

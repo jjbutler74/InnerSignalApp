@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 import { DarkScreen } from '../components/Screen';
 import { SignalMark } from '../components/Icons';
 import { Eyebrow } from '../components/Typography';
@@ -12,6 +13,13 @@ import { snoozeAffirmationNotification } from '../notifications/scheduler';
 import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Lock'>;
+type Route = RouteProp<RootStackParamList, 'Lock'>;
+
+const SLOT_LABEL: Record<'anchor1' | 'anchor2' | 'anchor3', string> = {
+  anchor1: 'Morning anchor',
+  anchor2: 'Midday reset',
+  anchor3: 'Evening pause',
+};
 
 function clockTime(): string {
   return new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: false });
@@ -22,7 +30,9 @@ function clockDate(): string {
 
 export function LockScreen() {
   const { fonts } = useTheme();
-  const nav = useNavigation<Nav>();
+  const nav   = useNavigation<Nav>();
+  const route = useRoute<Route>();
+  const slot  = route.params?.slot ?? 'anchor1';
   const activeAffirmation = useAffirmationStore(s => s.activeAffirmation);
 
   const [time, setTime] = useState(clockTime);
@@ -60,13 +70,13 @@ export function LockScreen() {
             <Text style={[s.appName, { fontFamily: fonts.sansMedium }]}>InnerSignal</Text>
             <Text style={[s.cardTime, { fontFamily: fonts.sans }]}>now</Text>
           </View>
-          <Eyebrow style={{ color: '#8A7B6E', marginBottom: 6 }}>Midday anchor</Eyebrow>
+          <Eyebrow style={{ color: '#8A7B6E', marginBottom: 6 }}>{SLOT_LABEL[slot]}</Eyebrow>
           <Text style={[s.affText, { fontFamily: fonts.display }]}>
             <Text style={{ fontStyle: 'italic' }}>{italicPart}</Text>
             {restPart}
           </Text>
           <View style={s.actions}>
-            <Pressable style={s.primaryBtn} onPress={() => nav.navigate('AffirmationMoment')}>
+            <Pressable style={s.primaryBtn} onPress={() => nav.navigate('AffirmationMoment', { slot })}>
               <Text style={[s.primaryBtnText, { fontFamily: fonts.sansMedium }]}>Read & breathe</Text>
             </Pressable>
             <Pressable style={s.secondaryBtn} onPress={handleSnooze} disabled={snoozed}>
@@ -77,7 +87,7 @@ export function LockScreen() {
           </View>
         </View>
 
-        <Text style={[s.hint, { fontFamily: fonts.sans }]}>Swipe up to open · hold to silence today</Text>
+        <Text style={[s.hint, { fontFamily: fonts.sans }]}>Swipe up to open</Text>
         <View style={{ flex: 0.3 }}/>
       </View>
     </DarkScreen>

@@ -59,9 +59,9 @@ export type RootStackParamList = {
   OnboardingWelcome: undefined;
   OnboardingName: undefined;
   OnboardingSchedule: undefined;
-  Lock: undefined;
+  Lock: { slot?: 'anchor1' | 'anchor2' | 'anchor3' };
   Today: undefined;
-  AffirmationMoment: undefined;
+  AffirmationMoment: { slot: 'anchor1' | 'anchor2' | 'anchor3' };
   AffirmationLibrary: undefined;
   AddAffirmation: undefined;
   Settings: undefined;
@@ -146,7 +146,7 @@ export default function App() {
       if (slot === 'gratitude') {
         navigationRef.navigate('EveningNotif');
       } else if (slot === 'anchor1' || slot === 'anchor2' || slot === 'anchor3') {
-        navigationRef.navigate('AffirmationMoment');
+        navigationRef.navigate('AffirmationMoment', { slot });
       }
     });
     return () => responseListenerRef.current?.remove();

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '../components/Screen';
@@ -24,12 +24,23 @@ export function AddAffirmationScreen() {
   const [text, setText] = useState('');
   const [packId, setPackId] = useState<string>(packs[0]?.id ?? '');
 
-  const canSave = text.trim().length > 0 && packId;
+  // Sync packId when packs load after mount
+  useEffect(() => {
+    if (!packId && packs.length > 0) {
+      setPackId(packs[0].id);
+    }
+  }, [packs]);
+
+  const canSave = text.trim().length > 0 && !!packId;
 
   const handleSave = async () => {
     if (!canSave) return;
-    await addAffirmation(text.trim(), packId);
-    nav.goBack();
+    try {
+      await addAffirmation(text.trim(), packId);
+      nav.goBack();
+    } catch (e) {
+      Alert.alert('Error', 'Could not save affirmation. Please try again.');
+    }
   };
 
   return (
