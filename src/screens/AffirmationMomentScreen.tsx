@@ -4,12 +4,13 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
-import { Screen } from '../components/Screen';
+import { DarkScreen } from '../components/Screen';
 import { Close, Heart, Check } from '../components/Icons';
 import { Eyebrow } from '../components/Typography';
 import { useTheme } from '../theme/ThemeContext';
 import { useAffirmationStore } from '../store/affirmationStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { playPreview } from '../utils/sound';
 import { useStatsStore } from '../store/statsStore';
 import type { RootStackParamList } from '../../App';
 
@@ -25,14 +26,19 @@ const SLOT_LABEL: Record<'anchor1' | 'anchor2' | 'anchor3', string> = {
 const INHALE = 4;
 const HOLD   = 4;
 const EXHALE = 6;
-const CYCLE  = INHALE + HOLD + EXHALE; // 14s
+const CYCLE  = INHALE + HOLD + EXHALE;
+
+const CREAM = '#F2EDE2';
+const AMBER = '#D4A24C';
+const SAGE  = '#6F8169';
+const DIM   = 'rgba(242,237,226,0.5)';
 
 function formatTime(secs: number): string {
   return `0:${String(secs).padStart(2, '0')}`;
 }
 
 export function AffirmationMomentScreen() {
-  const { t, fonts } = useTheme();
+  const { fonts } = useTheme();
   const nav   = useNavigation<Nav>();
   const route = useRoute<Route>();
   const { slot } = route.params;
@@ -47,6 +53,7 @@ export function AffirmationMomentScreen() {
     slot === 'anchor2' ? s.scheduleAnchor2 :
                          s.scheduleAnchor3
   );
+  const sound = useSettingsStore(s => s.sound);
 
   const breathAnim = useRef(new Animated.Value(0)).current;
   const [elapsed, setElapsed] = useState(0);
@@ -82,17 +89,18 @@ export function AffirmationMomentScreen() {
     elapsed < INHALE + HOLD      ? 'Hold'         :
                                    'Breathe out';
 
-  const affText   = activeAffirmation?.text ?? '';
-  const dashIdx   = affText.indexOf(' — ');
+  const affText    = activeAffirmation?.text ?? '';
+  const dashIdx    = affText.indexOf(' — ');
   const italicPart = dashIdx > -1 ? affText.slice(0, dashIdx) : '';
   const restPart   = dashIdx > -1 ? affText.slice(dashIdx) : affText;
 
   const handleFeltIt = async () => {
     if (!activeAffirmation) return;
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (sound !== 'silent') playPreview(sound);
     await markSeen(activeAffirmation.id);
     await recordCompletion(activeAffirmation.id, slot);
-    nav.goBack();
+    nav.navigate('Today');
   };
 
   const handleSave = () => {
@@ -102,23 +110,23 @@ export function AffirmationMomentScreen() {
   };
 
   return (
-    <Screen bg={t.bg}>
-      <View style={[s.root, { backgroundColor: t.bg }]}>
+    <DarkScreen>
+      <View style={s.root}>
         {/* Nav bar */}
         <View style={s.navBar}>
           <Pressable onPress={() => nav.goBack()}>
-            <Close size={22} color={t.muted}/>
+            <Close size={22} color={DIM}/>
           </Pressable>
-          <Eyebrow style={{ color: t.sage }}>{SLOT_LABEL[slot]} · {slotTime}</Eyebrow>
+          <Eyebrow style={{ color: DIM }}>{SLOT_LABEL[slot]} · {slotTime}</Eyebrow>
           <View style={{ width: 22 }}/>
         </View>
 
         {/* Affirmation text */}
         <View style={s.center}>
-          <Text style={[s.affText, { fontFamily: fonts.display, color: t.ink }]}>
+          <Text style={[s.affText, { fontFamily: fonts.display, color: CREAM }]}>
             {italicPart ? (
               <>
-                <Text style={{ fontStyle: 'italic', color: t.terra }}>{italicPart}</Text>
+                <Text style={{ fontStyle: 'italic', color: AMBER }}>{italicPart}</Text>
                 {restPart}
               </>
             ) : restPart}
@@ -126,14 +134,14 @@ export function AffirmationMomentScreen() {
 
           {/* Breathing bar */}
           <View style={s.breathRow}>
-            <Text style={[s.breathTimer, { color: t.muted, fontFamily: fonts.mono }]}>
+            <Text style={[s.breathTimer, { color: DIM, fontFamily: fonts.mono }]}>
               {formatTime(elapsed)} / {formatTime(CYCLE)}
             </Text>
-            <View style={[s.breathTrack, { backgroundColor: t.divider }]}>
-              <Animated.View style={[s.breathFill, { backgroundColor: t.terra, width: fillWidth }]}/>
+            <View style={[s.breathTrack, { backgroundColor: 'rgba(255,255,255,0.12)' }]}>
+              <Animated.View style={[s.breathFill, { backgroundColor: AMBER, width: fillWidth }]}/>
             </View>
           </View>
-          <Text style={[s.breathHint, { color: t.muted, fontFamily: fonts.display }]}>
+          <Text style={[s.breathHint, { color: DIM, fontFamily: fonts.display }]}>
             {breathPhase} · {INHALE}s in · {HOLD}s hold · {EXHALE}s out
           </Text>
         </View>
@@ -141,21 +149,21 @@ export function AffirmationMomentScreen() {
         {/* Actions */}
         <View style={s.actions}>
           <Pressable
-            style={[s.saveBtn, { backgroundColor: t.surface2, borderColor: t.hairline }]}
+            style={[s.saveBtn, { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.15)' }]}
             onPress={handleSave}
           >
-            <Heart size={16} color={activeAffirmation?.isFavorite ? t.terra : t.ink2}/>
-            <Text style={[s.saveBtnText, { color: t.ink2, fontFamily: fonts.sansMedium }]}>
+            <Heart size={16} color={activeAffirmation?.isFavorite ? AMBER : 'rgba(242,237,226,0.7)'}/>
+            <Text style={[s.saveBtnText, { color: 'rgba(242,237,226,0.7)', fontFamily: fonts.sansMedium }]}>
               {activeAffirmation?.isFavorite ? 'Saved' : 'Save'}
             </Text>
           </Pressable>
-          <Pressable style={[s.feltBtn, { backgroundColor: t.sage }]} onPress={handleFeltIt}>
+          <Pressable style={[s.feltBtn, { backgroundColor: SAGE }]} onPress={handleFeltIt}>
             <Check size={16} color="#fff"/>
             <Text style={[s.feltBtnText, { fontFamily: fonts.sansMedium }]}>I felt it</Text>
           </Pressable>
         </View>
       </View>
-    </Screen>
+    </DarkScreen>
   );
 }
 

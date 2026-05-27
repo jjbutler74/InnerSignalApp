@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import {
   getCompletionDates, getJournalDates,
   getTotalCounts, getWeeklyMoodValues,
+  getTodayCompletedSlots,
   recordCompletion,
 } from '../db/queries';
 import { today } from '../db/database';
@@ -14,6 +15,7 @@ interface StatsStore {
   totalEvenings: number;
   weeklyCompletions: boolean[]; // [Mon..Sun], true = had at least one completion
   weeklyMoods: (number | null)[]; // [Mon..Sun], 0–1 normalized mood, null = no entry
+  completedSlotsToday: Set<string>;
 
   load: () => Promise<void>;
   recordCompletion: (affirmationId: string, slot: Slot) => Promise<void>;
@@ -26,13 +28,15 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
   totalEvenings: 0,
   weeklyCompletions: Array(7).fill(false),
   weeklyMoods: Array(7).fill(null),
+  completedSlotsToday: new Set(),
 
   load: async () => {
-    const [completionDates, journalDates, counts, weeklyMoods] = await Promise.all([
+    const [completionDates, journalDates, counts, weeklyMoods, todaySlots] = await Promise.all([
       getCompletionDates(60),
       getJournalDates(60),
       getTotalCounts(),
       getWeeklyMoodValues(),
+      getTodayCompletedSlots(),
     ]);
 
     const activeDates = new Set([...completionDates, ...journalDates]);
@@ -47,6 +51,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
       totalEvenings: counts.totalEvenings,
       weeklyCompletions,
       weeklyMoods,
+      completedSlotsToday: new Set(todaySlots),
     });
   },
 
@@ -57,6 +62,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
       totalSeen: s.totalSeen + 1,
       lastCompletedDate: t,
       streakDays: s.lastCompletedDate === t ? s.streakDays : s.streakDays + 1,
+      completedSlotsToday: new Set([...s.completedSlotsToday, slot]),
     }));
   },
 }));

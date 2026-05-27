@@ -106,7 +106,7 @@ export function ScheduleScreen() {
           {' reaches you'}
         </Display>
         <Text style={[s.sub, { color: t.muted, fontFamily: fonts.sans }]}>
-          Three gentle nudges a day, plus an evening prompt for gratitude.
+          Three nudges a day, plus an evening prompt for gratitude.
         </Text>
 
         {/* Affirmations timeline */}

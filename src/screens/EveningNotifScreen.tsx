@@ -45,7 +45,7 @@ export function EveningNotifScreen() {
             <Eyebrow style={{ color: '#2D3B3F', marginBottom: 6 }}>Three good things</Eyebrow>
             <Text style={[s.affText, { fontFamily: fonts.display }]}>
               {'Before sleep — '}
-              <Text style={{ fontStyle: 'italic' }}>what landed softly today?</Text>
+              <Text style={{ fontStyle: 'italic' }}>what are you grateful for today?</Text>
             </Text>
             <View style={s.actions}>
               <Pressable style={s.primaryBtn} onPress={() => nav.navigate('GratitudeComposer')}>

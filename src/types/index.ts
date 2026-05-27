@@ -41,6 +41,7 @@ export interface UserSettings {
   weekendMode: boolean;
   sound: Sound;
   theme: Theme;
+  favoritesOnly: boolean;
   onboardingComplete: boolean;
 }
 
@@ -70,5 +71,6 @@ export const DEFAULT_SETTINGS: UserSettings = {
   weekendMode: false,
   sound: 'bell',
   theme: 'auto',
+  favoritesOnly: false,
   onboardingComplete: false,
 };

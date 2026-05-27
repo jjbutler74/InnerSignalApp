@@ -83,7 +83,7 @@ export function GratitudeJournalScreen() {
         <Eyebrow>{new Date().toLocaleDateString('en-US', { month: 'long' })} · {entries.length} entries</Eyebrow>
         <Display style={{ fontSize: 30, lineHeight: 34, marginTop: 4 }}>
           {'The '}
-          <DisplayItalic style={{ fontSize: 30 }}>small things</DisplayItalic>
+          <DisplayItalic style={{ fontSize: 30 }}>things</DisplayItalic>
           {' kept.'}
         </Display>
       </View>

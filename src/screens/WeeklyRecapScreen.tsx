@@ -82,7 +82,7 @@ export function WeeklyRecapScreen() {
         <Eyebrow>{weekLabel()}</Eyebrow>
         <Display style={{ fontSize: 32, lineHeight: 36, marginTop: 4, marginBottom: 16 }}>
           {'A '}
-          <DisplayItalic style={{ fontSize: 32, color: t.terra }}>tender</DisplayItalic>
+          <DisplayItalic style={{ fontSize: 32, color: t.terra }}>good</DisplayItalic>
           {' week.'}
         </Display>
 

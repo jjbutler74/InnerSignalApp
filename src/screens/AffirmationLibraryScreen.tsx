@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
+import { View, Text, FlatList, Pressable, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '../components/Screen';
 import { Card } from '../components/Card';
 import { Chip } from '../components/Chip';
 import { Display, DisplayItalic, Eyebrow } from '../components/Typography';
-import { ChevL, Plus, Heart } from '../components/Icons';
+import { ChevL, Plus, Heart, Trash } from '../components/Icons';
 import { useTheme } from '../theme/ThemeContext';
 import { useAffirmationStore } from '../store/affirmationStore';
 import type { Affirmation, Pack } from '../types';
@@ -21,6 +21,7 @@ export function AffirmationLibraryScreen() {
   const packs         = useAffirmationStore(s => s.packs);
   const affirmations  = useAffirmationStore(s => s.affirmations);
   const toggleFav     = useAffirmationStore(s => s.toggleFavorite);
+  const deleteAff     = useAffirmationStore(s => s.deleteAffirmation);
 
   const [activePackId, setActivePackId] = useState<string | 'all' | 'favorites'>('all');
 
@@ -51,6 +52,17 @@ export function AffirmationLibraryScreen() {
           <Text style={[s.seenText, { color: t.muted, fontFamily: fonts.mono }]}>
             seen {item.seenCount}×
           </Text>
+          <Pressable
+            hitSlop={8}
+            onPress={() =>
+              Alert.alert('Delete affirmation?', item.text.slice(0, 80) + (item.text.length > 80 ? '…' : ''), [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: () => deleteAff(item.id) },
+              ])
+            }
+          >
+            <Trash size={14} color={t.soft}/>
+          </Pressable>
         </View>
       </Card>
     );
@@ -132,7 +144,7 @@ const s = StyleSheet.create({
   affCard:     { gap: 0 },
   affRow:      { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   affText:     { flex: 1, fontSize: 15, lineHeight: 21 },
-  affMeta:     { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
-  seenText:    { fontSize: 11 },
+  affMeta:     { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, flex: 1 },
+  seenText:    { fontSize: 11, flex: 1 },
   empty:       { alignItems: 'center', paddingTop: 40 },
 });

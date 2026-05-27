@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
 import { Screen } from '../components/Screen';
@@ -38,7 +38,7 @@ export function GratitudeComposerScreen() {
     const entry = await saveDraft();
     if (entry) {
       await loadStats();
-      nav.navigate('GratitudeJournal');
+      nav.dispatch(CommonActions.reset({ index: 1, routes: [{ name: 'Today' }, { name: 'GratitudeJournal' }] }));
     }
   };
 
@@ -66,12 +66,12 @@ export function GratitudeComposerScreen() {
 
           {/* Prompt */}
           <Display style={{ fontSize: 32, lineHeight: 36, marginTop: 8, marginBottom: 4, letterSpacing: -0.4 }}>
-            {'What landed '}
-            <DisplayItalic style={{ fontSize: 32, color: t.terra }}>softly</DisplayItalic>
+            {'What are you '}
+            <DisplayItalic style={{ fontSize: 32, color: t.terra }}>grateful for</DisplayItalic>
             {' today?'}
           </Display>
           <Text style={[s.sub, { color: t.muted, fontFamily: fonts.sans }]}>
-            Small, specific, true. Two minutes is plenty.
+            Can be small, specific, true. A couple minutes is plenty.
           </Text>
 
           {/* Slots */}

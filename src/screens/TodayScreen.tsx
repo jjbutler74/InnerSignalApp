@@ -10,6 +10,7 @@ import { SignalMark, Leaf, Settings, Sun, Bolt, Moon, Heart, Flame } from '../co
 import { useTheme } from '../theme/ThemeContext';
 import { useSettingsStore } from '../store/settingsStore';
 import { useAffirmationStore } from '../store/affirmationStore';
+import { useJournalStore } from '../store/journalStore';
 import { useStatsStore } from '../store/statsStore';
 import type { RootStackParamList } from '../../App';
 
@@ -51,8 +52,12 @@ export function TodayScreen() {
   const activeAffirmation = useAffirmationStore(s => s.activeAffirmation);
   const toggleFavorite    = useAffirmationStore(s => s.toggleFavorite);
 
-  const streakDays        = useStatsStore(s => s.streakDays);
-  const weeklyCompletions = useStatsStore(s => s.weeklyCompletions);
+  const streakDays           = useStatsStore(s => s.streakDays);
+  const weeklyCompletions    = useStatsStore(s => s.weeklyCompletions);
+  const completedSlotsToday  = useStatsStore(s => s.completedSlotsToday);
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const gratitudeDone = useJournalStore(s => s.entries.some(e => e.date === todayStr));
 
   const displayName = name || 'there';
   const nextAnchor  = nextAnchorLabel(scheduleAnchor1, scheduleAnchor2, scheduleAnchor3);
@@ -162,7 +167,9 @@ export function TodayScreen() {
         {/* Day schedule */}
         <Card padding={0} style={{ marginBottom: 12 }}>
           {schedule.map((item, i) => {
-            const status = statusOf(item.time);
+            const status = item.slot === 'gratitude'
+              ? (gratitudeDone ? 'done' : statusOf(item.time))
+              : (completedSlotsToday.has(item.slot) ? 'done' : statusOf(item.time));
             return (
               <Pressable
                 key={item.time}
@@ -176,7 +183,7 @@ export function TodayScreen() {
                   {item.tone === 'sage'  && <Sun  size={16} color={toneColor(item.tone)}/>}
                   {item.tone === 'terra' && <Bolt size={16} color={toneColor(item.tone)}/>}
                   {item.tone === 'amber' && <Leaf size={16} color={toneColor(item.tone)}/>}
-                  {item.tone === 'night' && <Moon size={16} color="#fff"/>}
+                  {item.tone === 'night' && <View style={{ transform: [{ rotate: '180deg' }], marginTop: -5, marginLeft: 5 }}><Moon size={16} color="#fff"/></View>}
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[s.scheduleTitle, {

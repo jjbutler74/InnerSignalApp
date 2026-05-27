@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 import {
   getPacks, getAffirmations,
-  insertAffirmation, toggleFavorite, incrementSeenCount,
+  insertAffirmation, toggleFavorite, incrementSeenCount, deleteAffirmation,
 } from '../db/queries';
 import { today } from '../db/database';
+import { useSettingsStore } from './settingsStore';
 import type { Pack, Affirmation, Slot } from '../types';
 
 interface AffirmationStore {
@@ -17,6 +18,7 @@ interface AffirmationStore {
   toggleFavorite: (id: string) => Promise<void>;
   markSeen: (id: string) => Promise<void>;
   addAffirmation: (text: string, packId: string) => Promise<void>;
+  deleteAffirmation: (id: string) => Promise<void>;
 }
 
 export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
@@ -35,7 +37,10 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
   selectDailyAffirmation: (slot) => {
     const { packs, affirmations } = get();
     const activePacks = new Set(packs.filter(p => p.isActive).map(p => p.id));
-    const pool = affirmations.filter(a => activePacks.has(a.packId));
+    const fromActivePacks = affirmations.filter(a => activePacks.has(a.packId));
+    const { favoritesOnly } = useSettingsStore.getState();
+    const favorites = fromActivePacks.filter(a => a.isFavorite);
+    const pool = favoritesOnly && favorites.length > 0 ? favorites : fromActivePacks;
     if (!pool.length) return;
 
     // Date-seeded pick, biased toward lower seenCount
@@ -84,5 +89,13 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
   addAffirmation: async (text, packId) => {
     const aff = await insertAffirmation(text, packId);
     set(s => ({ affirmations: [aff, ...s.affirmations] }));
+  },
+
+  deleteAffirmation: async (id) => {
+    await deleteAffirmation(id);
+    set(s => ({
+      affirmations: s.affirmations.filter(a => a.id !== id),
+      activeAffirmation: s.activeAffirmation?.id === id ? null : s.activeAffirmation,
+    }));
   },
 }));

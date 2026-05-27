@@ -89,7 +89,7 @@ export function OnboardingScheduleScreen() {
           {' reaches you'}
         </Display>
         <Text style={[s.sub, { color: t.muted, fontFamily: fonts.sans }]}>
-          Three gentle nudges a day, plus an evening prompt for gratitude.
+          Three nudges a day, plus an evening prompt for gratitude.
         </Text>
 
         <View style={s.slots}>
@@ -103,9 +103,9 @@ export function OnboardingScheduleScreen() {
                 <Icon size={18} color={key === 'gratitude' ? '#fff' : color}/>
               </View>
               <View style={{ flex: 1 }}>
-                <Eyebrow>{label}</Eyebrow>
+                <Eyebrow style={{ color: t.ink }}>{label}</Eyebrow>
               </View>
-              <Text style={[s.slotTime, { color: t.ink, fontFamily: fonts.mono }]}>{times[key]}</Text>
+              <Text style={[s.slotTime, { color: t.ink, fontFamily: fonts.monoMedium }]}>{times[key]}</Text>
             </Pressable>
           ))}
         </View>

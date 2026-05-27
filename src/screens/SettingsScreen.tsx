@@ -11,6 +11,7 @@ import { Card } from '../components/Card';
 import { PressableRow } from '../components/PressableRow';
 import { Eyebrow, Display, DisplayItalic } from '../components/Typography';
 import { ChevL } from '../components/Icons';
+import { Toggle } from '../components/Toggle';
 import { CommonActions } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
 import { useSettingsStore } from '../store/settingsStore';
@@ -43,10 +44,11 @@ export function SettingsScreen() {
   const name    = useSettingsStore(s => s.name);
   const sound   = useSettingsStore(s => s.sound);
   const theme   = useSettingsStore(s => s.theme);
-  const anchor1 = useSettingsStore(s => s.scheduleAnchor1);
-  const anchor2 = useSettingsStore(s => s.scheduleAnchor2);
-  const anchor3 = useSettingsStore(s => s.scheduleAnchor3);
-  const update  = useSettingsStore(s => s.update);
+  const anchor1       = useSettingsStore(s => s.scheduleAnchor1);
+  const anchor2       = useSettingsStore(s => s.scheduleAnchor2);
+  const anchor3       = useSettingsStore(s => s.scheduleAnchor3);
+  const favoritesOnly = useSettingsStore(s => s.favoritesOnly);
+  const update        = useSettingsStore(s => s.update);
 
   const scheduleValue = `${anchor1} · ${anchor2} · ${anchor3}`;
   const initials = (name || '?')[0].toUpperCase();
@@ -129,6 +131,13 @@ export function SettingsScreen() {
             value={`${activePacks} active`}
             onPress={() => nav.navigate('AffirmationLibrary')}
           />
+          <View style={[s.toggleRow, { borderTopWidth: 1, borderTopColor: t.hairline }]}>
+            <Text style={[s.toggleLabel, { color: t.ink, fontFamily: fonts.sansMedium }]}>Favorites only</Text>
+            <Toggle
+              on={favoritesOnly}
+              onToggle={v => update({ favoritesOnly: v })}
+            />
+          </View>
         </Card>
 
         {/* Sound & feel */}
@@ -183,4 +192,6 @@ const s = StyleSheet.create({
   profileName: { fontSize: 16 },
   profileSub:  { fontSize: 12, marginTop: 3 },
   recapBtn:    { paddingVertical: 16, borderRadius: 14, borderWidth: 1, alignItems: 'center' },
+  toggleRow:   { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 13 },
+  toggleLabel: { flex: 1, fontSize: 14 },
 });

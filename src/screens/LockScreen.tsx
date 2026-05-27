@@ -87,8 +87,7 @@ export function LockScreen() {
           </View>
         </View>
 
-        <Text style={[s.hint, { fontFamily: fonts.sans }]}>Swipe up to open</Text>
-        <View style={{ flex: 0.3 }}/>
+<View style={{ flex: 0.3 }}/>
       </View>
     </DarkScreen>
   );
@@ -113,5 +112,4 @@ const s = StyleSheet.create({
   primaryBtnText:  { fontSize: 13, color: CREAM },
   secondaryBtn:    { backgroundColor: '#F6F0E2', borderRadius: 999, paddingVertical: 10, paddingHorizontal: 14 },
   secondaryBtnText:{ fontSize: 13, color: INK },
-  hint:            { textAlign: 'center', fontSize: 12, color: 'rgba(242,237,226,0.55)', marginTop: 14 },
 });

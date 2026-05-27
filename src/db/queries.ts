@@ -20,6 +20,7 @@ export async function loadSettings(): Promise<Partial<UserSettings>> {
   if (map.weekendMode      !== undefined) out.weekendMode       = map.weekendMode === '1';
   if (map.sound            !== undefined) out.sound             = map.sound as UserSettings['sound'];
   if (map.theme            !== undefined) out.theme             = map.theme as UserSettings['theme'];
+  if (map.favoritesOnly      !== undefined) out.favoritesOnly      = map.favoritesOnly === '1';
   if (map.onboardingComplete !== undefined) out.onboardingComplete = map.onboardingComplete === '1';
   return out;
 }
@@ -38,6 +39,7 @@ export async function saveSettings(settings: Partial<UserSettings>): Promise<voi
   if (settings.weekendMode      !== undefined) entries.push(['weekendMode',        settings.weekendMode ? '1' : '0']);
   if (settings.sound            !== undefined) entries.push(['sound',             settings.sound]);
   if (settings.theme            !== undefined) entries.push(['theme',             settings.theme]);
+  if (settings.favoritesOnly      !== undefined) entries.push(['favoritesOnly',      settings.favoritesOnly ? '1' : '0']);
   if (settings.onboardingComplete !== undefined) entries.push(['onboardingComplete', settings.onboardingComplete ? '1' : '0']);
 
   await db.withTransactionAsync(async () => {
@@ -129,6 +131,11 @@ export async function incrementSeenCount(id: string): Promise<void> {
   await db.runAsync('UPDATE affirmations SET seen_count = seen_count + 1 WHERE id = ?', [id]);
 }
 
+export async function deleteAffirmation(id: string): Promise<void> {
+  const db = await getDb();
+  await db.runAsync('DELETE FROM affirmations WHERE id = ?', [id]);
+}
+
 export async function insertPackWithAffirmations(
   pack: Omit<Pack, 'id'>,
   texts: string[],
@@ -210,6 +217,15 @@ export async function recordCompletion(affirmationId: string, slot: Slot): Promi
     'INSERT INTO completions (id, date, affirmation_id, slot) VALUES (?, ?, ?, ?)',
     [uid(), today(), affirmationId, slot],
   );
+}
+
+export async function getTodayCompletedSlots(): Promise<string[]> {
+  const db = await getDb();
+  const rows = await db.getAllAsync<{ slot: string }>(
+    'SELECT DISTINCT slot FROM completions WHERE date = ?',
+    [today()],
+  );
+  return rows.map(r => r.slot);
 }
 
 export async function getCompletionDates(limitDays = 30): Promise<string[]> {
