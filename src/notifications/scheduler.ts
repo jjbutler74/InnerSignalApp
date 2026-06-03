@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import type { UserSettings } from '../types';
+import { isTodayGratitudeDone } from '../db/queries';
 
 type SlotConfig = {
   time: string;
@@ -72,6 +73,9 @@ export async function scheduleAllNotifications(settings: UserSettings): Promise<
 
   await Notifications.cancelAllScheduledNotificationsAsync();
 
+  const gratitudeDoneToday = await isTodayGratitudeDone();
+  const now = new Date();
+
   for (const slotFn of SLOTS) {
     const cfg = slotFn(settings);
 
@@ -86,6 +90,27 @@ export async function scheduleAllNotifications(settings: UserSettings): Promise<
       data: { slot: cfg.slot },
       sound: settings.sound === 'silent' ? false : settings.sound,
     };
+
+    if (cfg.slot === 'gratitude') {
+      // Use per-day DATE triggers so we can skip today if already done.
+      // Covers the next 7 days; re-runs on each app launch to stay current.
+      for (let d = 0; d < 7; d++) {
+        const date = new Date();
+        date.setDate(date.getDate() + d);
+        date.setHours(hour, minute, 0, 0);
+        if (d === 0 && (gratitudeDoneToday || date <= now)) continue;
+        if (date <= now) continue;
+        await Notifications.scheduleNotificationAsync({
+          content,
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date,
+            channelId: cfg.channelId,
+          },
+        });
+      }
+      continue;
+    }
 
     if (settings.weekendMode && WEEKEND_REDUCED.has(cfg.slot)) {
       for (const weekday of WEEKDAYS) {

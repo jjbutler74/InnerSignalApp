@@ -175,6 +175,14 @@ function rowToEntry(r: JournalRow): JournalEntry {
   };
 }
 
+export async function isTodayGratitudeDone(): Promise<boolean> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ n: number }>(
+    'SELECT COUNT(*) as n FROM journal_entries WHERE date = ?', [today()],
+  );
+  return (row?.n ?? 0) > 0;
+}
+
 export async function getJournalEntries(): Promise<JournalEntry[]> {
   const db = await getDb();
   const rows = await db.getAllAsync<JournalRow>(

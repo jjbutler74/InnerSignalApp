@@ -9,6 +9,8 @@ import { Eyebrow, Display, DisplayItalic } from '../components/Typography';
 import { useTheme } from '../theme/ThemeContext';
 import { useJournalStore } from '../store/journalStore';
 import { useStatsStore } from '../store/statsStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { scheduleAllNotifications } from '../notifications/scheduler';
 import { MOOD_COLORS, type Mood } from '../types';
 import type { RootStackParamList } from '../../App';
 
@@ -38,6 +40,7 @@ export function GratitudeComposerScreen() {
     const entry = await saveDraft();
     if (entry) {
       await loadStats();
+      scheduleAllNotifications(useSettingsStore.getState());
       nav.dispatch(CommonActions.reset({ index: 1, routes: [{ name: 'Today' }, { name: 'GratitudeJournal' }] }));
     }
   };

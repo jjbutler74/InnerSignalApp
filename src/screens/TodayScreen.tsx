@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '../components/Screen';
 import { Card } from '../components/Card';
@@ -49,8 +49,14 @@ export function TodayScreen() {
   const scheduleAnchor3  = useSettingsStore(s => s.scheduleAnchor3);
   const scheduleGratitude = useSettingsStore(s => s.scheduleGratitude);
 
-  const activeAffirmation = useAffirmationStore(s => s.activeAffirmation);
-  const toggleFavorite    = useAffirmationStore(s => s.toggleFavorite);
+  const activeAffirmation        = useAffirmationStore(s => s.activeAffirmation);
+  const activeSlot               = useAffirmationStore(s => s.activeSlot);
+  const toggleFavorite           = useAffirmationStore(s => s.toggleFavorite);
+  const refreshActiveAffirmation = useAffirmationStore(s => s.refreshActiveAffirmation);
+
+  const SLOT_LABEL = { anchor1: 'Morning', anchor2: 'Midday', anchor3: 'Evening' } as const;
+
+  useFocusEffect(useCallback(() => { refreshActiveAffirmation(); }, []));
 
   const streakDays           = useStatsStore(s => s.streakDays);
   const weeklyCompletions    = useStatsStore(s => s.weeklyCompletions);
@@ -143,7 +149,7 @@ export function TodayScreen() {
         {/* Today's affirmation card */}
         <Card style={{ marginBottom: 12 }}>
           <View style={s.cardHeader}>
-            <Eyebrow style={{ color: t.sage }}>Today's affirmation</Eyebrow>
+            <Eyebrow style={{ color: t.sage }}>Today's {SLOT_LABEL[activeSlot]} Affirmation</Eyebrow>
           </View>
           <Display style={{ fontSize: 22, lineHeight: 28, marginTop: 4 }}>
             {affText}
@@ -168,12 +174,13 @@ export function TodayScreen() {
         <Card padding={0} style={{ marginBottom: 12 }}>
           {schedule.map((item, i) => {
             const status = item.slot === 'gratitude'
-              ? (gratitudeDone ? 'done' : statusOf(item.time))
+              ? (gratitudeDone ? 'done' : statusOf(item.time) === 'done' ? 'next' : statusOf(item.time))
               : (completedSlotsToday.has(item.slot) ? 'done' : statusOf(item.time));
+            const canTap = status === 'next' || (item.slot === 'gratitude' && status === 'pending');
             return (
               <Pressable
                 key={item.time}
-                onPress={status === 'next' ? () => item.slot === 'gratitude' ? nav.navigate('EveningNotif') : nav.navigate('AffirmationMoment', { slot: item.slot }) : undefined}
+                onPress={canTap ? () => item.slot === 'gratitude' ? nav.navigate('EveningNotif') : nav.navigate('AffirmationMoment', { slot: item.slot }) : undefined}
                 style={[s.scheduleRow, i > 0 && { borderTopWidth: 1, borderTopColor: t.hairline }]}
               >
                 <View style={[s.scheduleIcon, {

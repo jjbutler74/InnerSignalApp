@@ -43,6 +43,10 @@ export function ScheduleScreen() {
   const labels  = ['Morning', 'Midday', 'Evening'];
 
   const [picking, setPicking] = useState<'anchor1' | 'anchor2' | 'anchor3' | 'gratitude' | 'quietStart' | 'quietEnd' | null>(null);
+  const [tooltip, setTooltip] = useState<'quiet' | 'weekend' | null>(null);
+
+  const toggleTooltip = (which: 'quiet' | 'weekend') =>
+    setTooltip(prev => prev === which ? null : which);
 
   const handleChange = (_: unknown, date?: Date) => {
     if (date && picking) {
@@ -155,9 +159,21 @@ export function ScheduleScreen() {
         {/* Other settings */}
         <Card padding={0}>
           <View style={[s.toggleRow, { borderBottomWidth: 1, borderBottomColor: t.hairline }]}>
-            <Text style={[s.toggleLabel, { color: t.ink, fontFamily: fonts.sansMedium }]}>Quiet hours</Text>
+            <View style={s.labelRow}>
+              <Text style={[s.toggleLabel, { color: t.ink, fontFamily: fonts.sansMedium }]}>Quiet hours</Text>
+              <Pressable onPress={() => toggleTooltip('quiet')} hitSlop={8}>
+                <View style={[s.infoBtn, { borderColor: tooltip === 'quiet' ? t.ink2 : t.soft }]}>
+                  <Text style={[s.infoBtnText, { color: tooltip === 'quiet' ? t.ink2 : t.soft, fontFamily: fonts.mono }]}>?</Text>
+                </View>
+              </Pressable>
+            </View>
             <Toggle on={!!quietStart} onToggle={toggleQuietHours}/>
           </View>
+          {tooltip === 'quiet' && (
+            <Text style={[s.tooltipText, { color: t.muted, fontFamily: fonts.sans, borderBottomWidth: 1, borderBottomColor: t.hairline }]}>
+              Notifications that fall inside this window won't be scheduled at all — they won't ring or vibrate. The app still works normally during quiet hours.
+            </Text>
+          )}
           {quietStart && (
             <View style={[s.quietPickers, { borderBottomWidth: 1, borderBottomColor: t.hairline }]}>
               <Pressable style={s.quietTime} onPress={() => setPicking('quietStart')}>
@@ -172,9 +188,21 @@ export function ScheduleScreen() {
             </View>
           )}
           <View style={s.toggleRow}>
-            <Text style={[s.toggleLabel, { color: t.ink, fontFamily: fonts.sansMedium }]}>Lighter weekends</Text>
+            <View style={s.labelRow}>
+              <Text style={[s.toggleLabel, { color: t.ink, fontFamily: fonts.sansMedium }]}>Lighter weekends</Text>
+              <Pressable onPress={() => toggleTooltip('weekend')} hitSlop={8}>
+                <View style={[s.infoBtn, { borderColor: tooltip === 'weekend' ? t.ink2 : t.soft }]}>
+                  <Text style={[s.infoBtnText, { color: tooltip === 'weekend' ? t.ink2 : t.soft, fontFamily: fonts.mono }]}>?</Text>
+                </View>
+              </Pressable>
+            </View>
             <Toggle on={weekendMode} onToggle={toggleWeekend}/>
           </View>
+          {tooltip === 'weekend' && (
+            <Text style={[s.tooltipText, { color: t.muted, fontFamily: fonts.sans }]}>
+              On Saturdays and Sundays only your morning anchor fires. Midday and evening affirmation notifications are skipped so weekends feel lighter.
+            </Text>
+          )}
         </Card>
       </ScrollView>
 
@@ -217,4 +245,8 @@ const s = StyleSheet.create({
   quietTimeLabel: { fontSize: 10, letterSpacing: 0.5 },
   quietTimeVal:   { fontSize: 18 },
   quietDivider:   { width: 1, height: 28, marginHorizontal: 12 },
+  labelRow:       { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  infoBtn:        { width: 16, height: 16, borderRadius: 8, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  infoBtnText:    { fontSize: 10, lineHeight: 13 },
+  tooltipText:    { fontSize: 12, lineHeight: 18, paddingHorizontal: 16, paddingVertical: 10 },
 });

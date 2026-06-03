@@ -11,9 +11,11 @@ interface AffirmationStore {
   packs: Pack[];
   affirmations: Affirmation[];
   activeAffirmation: Affirmation | null;
+  activeSlot: 'anchor1' | 'anchor2' | 'anchor3';
   loaded: boolean;
 
   load: () => Promise<void>;
+  refreshActiveAffirmation: () => void;
   selectDailyAffirmation: (slot: Slot) => void;
   toggleFavorite: (id: string) => Promise<void>;
   markSeen: (id: string) => Promise<void>;
@@ -25,13 +27,25 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
   packs: [],
   affirmations: [],
   activeAffirmation: null,
+  activeSlot: 'anchor1',
   loaded: false,
 
   load: async () => {
     const [packs, affirmations] = await Promise.all([getPacks(), getAffirmations()]);
-    const state = { packs, affirmations, loaded: true };
-    set(state);
-    get().selectDailyAffirmation('anchor1');
+    set({ packs, affirmations, loaded: true });
+    get().refreshActiveAffirmation();
+  },
+
+  refreshActiveAffirmation: () => {
+    const { scheduleAnchor2, scheduleAnchor3 } = useSettingsStore.getState();
+    const toMins = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+    const now = new Date().getHours() * 60 + new Date().getMinutes();
+    const slot: 'anchor1' | 'anchor2' | 'anchor3' =
+      now < toMins(scheduleAnchor2) ? 'anchor1'
+    : now < toMins(scheduleAnchor3) ? 'anchor2'
+    : 'anchor3';
+    set({ activeSlot: slot });
+    get().selectDailyAffirmation(slot);
   },
 
   selectDailyAffirmation: (slot) => {
