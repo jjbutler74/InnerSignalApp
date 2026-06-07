@@ -6,7 +6,10 @@ import { DarkScreen } from '../components/Screen';
 import { Moon } from '../components/Icons';
 import { Eyebrow } from '../components/Typography';
 import { useTheme } from '../theme/ThemeContext';
+import { useSettingsStore } from '../store/settingsStore';
 import type { RootStackParamList } from '../../App';
+
+const COUNT_WORDS = { 1: 'One', 2: 'Two', 3: 'Three' } as const;
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'EveningNotif'>;
 
@@ -20,6 +23,7 @@ function clockLabel(): string {
 export function EveningNotifScreen() {
   const { fonts } = useTheme();
   const nav = useNavigation<Nav>();
+  const gratitudeCount = useSettingsStore(s => s.gratitudeCount);
 
   const [time, setTime] = useState(clockTime);
   useEffect(() => {
@@ -42,7 +46,9 @@ export function EveningNotifScreen() {
               <Text style={[s.appName, { fontFamily: fonts.sansMedium }]}>InnerSignal</Text>
               <Text style={[s.cardTime, { fontFamily: fonts.sans }]}>{time}</Text>
             </View>
-            <Eyebrow style={{ color: '#2D3B3F', marginBottom: 6 }}>Three good things</Eyebrow>
+            <Eyebrow style={{ color: '#2D3B3F', marginBottom: 6 }}>
+              {COUNT_WORDS[gratitudeCount]} good {gratitudeCount === 1 ? 'thing' : 'things'}
+            </Eyebrow>
             <Text style={[s.affText, { fontFamily: fonts.display }]}>
               {'Before sleep — '}
               <Text style={{ fontStyle: 'italic' }}>what are you grateful for today?</Text>

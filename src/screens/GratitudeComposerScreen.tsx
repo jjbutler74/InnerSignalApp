@@ -27,13 +27,15 @@ export function GratitudeComposerScreen() {
   const setMood     = useJournalStore(s => s.setDraftMood);
   const saveDraft   = useJournalStore(s => s.saveDraft);
   const loadStats   = useStatsStore(s => s.load);
+  const slotCount   = useSettingsStore(s => s.gratitudeCount);
 
   const input1 = useRef<TextInput>(null);
   const input2 = useRef<TextInput>(null);
   const input3 = useRef<TextInput>(null);
   const refs   = [input1, input2, input3];
 
-  const filledCount = draft.items.filter(i => i.trim()).length;
+  const slots = Array.from({ length: slotCount }, (_, i) => i as 0 | 1 | 2);
+  const filledCount = draft.items.slice(0, slotCount).filter(i => i.trim()).length;
 
   const handleSave = async () => {
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -61,7 +63,7 @@ export function GratitudeComposerScreen() {
             <Pressable onPress={() => nav.goBack()}>
               <Close size={22} color={t.muted}/>
             </Pressable>
-            <Eyebrow style={{ color: t.night }}>Tonight · {filledCount} of 3</Eyebrow>
+            <Eyebrow style={{ color: t.night }}>Tonight · {filledCount} of {slotCount}</Eyebrow>
             <Pressable onPress={() => nav.goBack()}>
               <Text style={[s.skipText, { color: t.muted, fontFamily: fonts.sansMedium }]}>Skip</Text>
             </Pressable>
@@ -79,7 +81,7 @@ export function GratitudeComposerScreen() {
 
           {/* Slots */}
           <View style={s.slots}>
-            {([0, 1, 2] as const).map(i => {
+            {slots.map(i => {
               const state = slotState(i);
               return (
                 <Pressable

@@ -15,6 +15,7 @@ export async function loadSettings(): Promise<Partial<UserSettings>> {
   if (map.scheduleAnchor2  !== undefined) out.scheduleAnchor2   = map.scheduleAnchor2;
   if (map.scheduleAnchor3  !== undefined) out.scheduleAnchor3   = map.scheduleAnchor3;
   if (map.scheduleGratitude !== undefined) out.scheduleGratitude = map.scheduleGratitude;
+  if (map.gratitudeCount   !== undefined) out.gratitudeCount    = (Number(map.gratitudeCount) || 3) as 1 | 2 | 3;
   if (map.quietHoursStart  !== undefined) out.quietHoursStart   = map.quietHoursStart || null;
   if (map.quietHoursEnd    !== undefined) out.quietHoursEnd     = map.quietHoursEnd   || null;
   if (map.weekendMode      !== undefined) out.weekendMode       = map.weekendMode === '1';
@@ -34,6 +35,7 @@ export async function saveSettings(settings: Partial<UserSettings>): Promise<voi
   if (settings.scheduleAnchor2  !== undefined) entries.push(['scheduleAnchor2',   settings.scheduleAnchor2]);
   if (settings.scheduleAnchor3  !== undefined) entries.push(['scheduleAnchor3',   settings.scheduleAnchor3]);
   if (settings.scheduleGratitude !== undefined) entries.push(['scheduleGratitude', settings.scheduleGratitude]);
+  if (settings.gratitudeCount   !== undefined) entries.push(['gratitudeCount',    String(settings.gratitudeCount)]);
   if (settings.quietHoursStart  !== undefined) entries.push(['quietHoursStart',   settings.quietHoursStart ?? '']);
   if (settings.quietHoursEnd    !== undefined) entries.push(['quietHoursEnd',     settings.quietHoursEnd   ?? '']);
   if (settings.weekendMode      !== undefined) entries.push(['weekendMode',        settings.weekendMode ? '1' : '0']);

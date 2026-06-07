@@ -16,8 +16,10 @@ interface StatsStore {
   weeklyCompletions: boolean[]; // [Mon..Sun], true = had at least one completion
   weeklyMoods: (number | null)[]; // [Mon..Sun], 0–1 normalized mood, null = no entry
   completedSlotsToday: Set<string>;
+  statsDate: string;
 
   load: () => Promise<void>;
+  refreshIfNewDay: () => void;
   recordCompletion: (affirmationId: string, slot: Slot) => Promise<void>;
 }
 
@@ -29,6 +31,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
   weeklyCompletions: Array(7).fill(false),
   weeklyMoods: Array(7).fill(null),
   completedSlotsToday: new Set(),
+  statsDate: '',
 
   load: async () => {
     const [completionDates, journalDates, counts, weeklyMoods, todaySlots] = await Promise.all([
@@ -52,7 +55,15 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
       weeklyCompletions,
       weeklyMoods,
       completedSlotsToday: new Set(todaySlots),
+      statsDate: today(),
     });
+  },
+
+  // Re-query today's completions when the calendar date has rolled over
+  // while the app stayed open, so checkmarks/strikethroughs clear at midnight.
+  refreshIfNewDay: () => {
+    if (get().statsDate === today()) return;
+    get().load();
   },
 
   recordCompletion: async (affirmationId, slot) => {

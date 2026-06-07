@@ -12,6 +12,7 @@ interface AffirmationStore {
   affirmations: Affirmation[];
   activeAffirmation: Affirmation | null;
   activeSlot: 'anchor1' | 'anchor2' | 'anchor3';
+  activeDate: string;
   loaded: boolean;
 
   load: () => Promise<void>;
@@ -28,6 +29,7 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
   affirmations: [],
   activeAffirmation: null,
   activeSlot: 'anchor1',
+  activeDate: '',
   loaded: false,
 
   load: async () => {
@@ -39,12 +41,17 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
   refreshActiveAffirmation: () => {
     const { scheduleAnchor2, scheduleAnchor3 } = useSettingsStore.getState();
     const toMins = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
-    const now = new Date().getHours() * 60 + new Date().getMinutes();
+    const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
     const slot: 'anchor1' | 'anchor2' | 'anchor3' =
-      now < toMins(scheduleAnchor2) ? 'anchor1'
-    : now < toMins(scheduleAnchor3) ? 'anchor2'
+      nowMins < toMins(scheduleAnchor2) ? 'anchor1'
+    : nowMins < toMins(scheduleAnchor3) ? 'anchor2'
     : 'anchor3';
-    set({ activeSlot: slot });
+    const date = today();
+    const { activeSlot, activeDate } = get();
+    // Only re-pick when the calendar date or time-of-day slot has changed.
+    // Navigating back to Today after "I felt it" must not reshuffle the pick.
+    if (slot === activeSlot && date === activeDate) return;
+    set({ activeSlot: slot, activeDate: date });
     get().selectDailyAffirmation(slot);
   },
 

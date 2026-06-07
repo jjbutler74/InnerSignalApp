@@ -48,6 +48,7 @@ export function TodayScreen() {
   const scheduleAnchor2  = useSettingsStore(s => s.scheduleAnchor2);
   const scheduleAnchor3  = useSettingsStore(s => s.scheduleAnchor3);
   const scheduleGratitude = useSettingsStore(s => s.scheduleGratitude);
+  const gratitudeCount    = useSettingsStore(s => s.gratitudeCount);
 
   const activeAffirmation        = useAffirmationStore(s => s.activeAffirmation);
   const activeSlot               = useAffirmationStore(s => s.activeSlot);
@@ -56,11 +57,15 @@ export function TodayScreen() {
 
   const SLOT_LABEL = { anchor1: 'Morning', anchor2: 'Midday', anchor3: 'Evening' } as const;
 
-  useFocusEffect(useCallback(() => { refreshActiveAffirmation(); }, []));
-
   const streakDays           = useStatsStore(s => s.streakDays);
   const weeklyCompletions    = useStatsStore(s => s.weeklyCompletions);
   const completedSlotsToday  = useStatsStore(s => s.completedSlotsToday);
+  const refreshIfNewDay      = useStatsStore(s => s.refreshIfNewDay);
+
+  useFocusEffect(useCallback(() => {
+    refreshActiveAffirmation();
+    refreshIfNewDay();
+  }, []));
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const gratitudeDone = useJournalStore(s => s.entries.some(e => e.date === todayStr));
@@ -76,13 +81,24 @@ export function TodayScreen() {
     { time: scheduleAnchor1,   title: 'Morning anchor', sub: 'Set the tone', tone: 'sage',  slot: 'anchor1'   as const },
     { time: scheduleAnchor2,   title: 'Midday reset',   sub: 'Coming up',   tone: 'terra', slot: 'anchor2'   as const },
     { time: scheduleAnchor3,   title: 'Evening pause',  sub: 'Tonight',     tone: 'amber', slot: 'anchor3'   as const },
-    { time: scheduleGratitude, title: 'Gratitude',      sub: '3 things',    tone: 'night', slot: 'gratitude' as const },
+    { time: scheduleGratitude, title: 'Gratitude',      sub: gratitudeCount === 1 ? '1 thing' : `${gratitudeCount} things`, tone: 'night', slot: 'gratitude' as const },
   ] as const;
 
   const statusOf = (time: string) => {
     const m = toMins(time);
     if (m < nowMins - 30) return 'done';
     if (m <= nowMins + 60) return 'next';
+    return 'pending';
+  };
+
+  // An anchor is only crossed off once it's actually been read ("I felt it"),
+  // or once the time-of-day has moved on to a later anchor — never just
+  // because its scheduled time passed while it sat unread.
+  const SLOT_ORDER = { anchor1: 0, anchor2: 1, anchor3: 2 } as const;
+  const anchorStatus = (slot: 'anchor1' | 'anchor2' | 'anchor3') => {
+    if (completedSlotsToday.has(slot)) return 'done';
+    if (SLOT_ORDER[slot] < SLOT_ORDER[activeSlot]) return 'done';
+    if (slot === activeSlot) return 'next';
     return 'pending';
   };
 
@@ -164,7 +180,7 @@ export function TodayScreen() {
                 {isFav ? 'Saved' : 'Save to favorites'}
               </Text>
             </Pressable>
-            <Pressable onPress={() => nav.navigate('AffirmationMoment', { slot: 'anchor1' })}>
+            <Pressable onPress={() => nav.navigate('AffirmationMoment', { slot: activeSlot })}>
               <Text style={[s.ghostBtn, { color: t.muted, fontFamily: fonts.sansMedium }]}>Read & breathe</Text>
             </Pressable>
           </View>
@@ -175,7 +191,7 @@ export function TodayScreen() {
           {schedule.map((item, i) => {
             const status = item.slot === 'gratitude'
               ? (gratitudeDone ? 'done' : statusOf(item.time) === 'done' ? 'next' : statusOf(item.time))
-              : (completedSlotsToday.has(item.slot) ? 'done' : statusOf(item.time));
+              : anchorStatus(item.slot);
             const canTap = status === 'next' || (item.slot === 'gratitude' && status === 'pending');
             return (
               <Pressable

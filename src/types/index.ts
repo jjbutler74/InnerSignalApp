@@ -36,6 +36,7 @@ export interface UserSettings {
   scheduleAnchor2: string;
   scheduleAnchor3: string;
   scheduleGratitude: string;
+  gratitudeCount: 1 | 2 | 3;
   quietHoursStart: string | null;
   quietHoursEnd: string | null;
   weekendMode: boolean;
@@ -66,6 +67,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   scheduleAnchor2: '12:30',
   scheduleAnchor3: '17:00',
   scheduleGratitude: '21:30',
+  gratitudeCount: 3,
   quietHoursStart: null,
   quietHoursEnd: null,
   weekendMode: false,

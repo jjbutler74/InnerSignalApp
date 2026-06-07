@@ -34,6 +34,7 @@ export function ScheduleScreen() {
   const anchor2        = useSettingsStore(s => s.scheduleAnchor2);
   const anchor3        = useSettingsStore(s => s.scheduleAnchor3);
   const gratitude      = useSettingsStore(s => s.scheduleGratitude);
+  const gratitudeCount = useSettingsStore(s => s.gratitudeCount);
   const quietStart     = useSettingsStore(s => s.quietHoursStart);
   const quietEnd       = useSettingsStore(s => s.quietHoursEnd);
   const weekendMode    = useSettingsStore(s => s.weekendMode);
@@ -127,7 +128,7 @@ export function ScheduleScreen() {
                 style={[s.timelineDot, { left: `${timelinePct(time)}%`, backgroundColor: ANCHOR_COLORS[i] }]}
                 onPress={() => setPicking(`anchor${i + 1}` as 'anchor1' | 'anchor2' | 'anchor3')}
               >
-                <Text style={[s.timelineDotLabel, { fontFamily: fonts.mono, color: t.muted }]}>{time}</Text>
+                <Text style={[s.timelineDotLabel, { fontFamily: fonts.monoMedium, color: t.ink }]}>{time}</Text>
                 <View style={[s.dot, { backgroundColor: ANCHOR_COLORS[i] }]}/>
                 <Text style={[s.timelineDotSub, { fontFamily: fonts.sans, color: t.ink2 }]}>{labels[i]}</Text>
               </Pressable>
@@ -147,13 +148,38 @@ export function ScheduleScreen() {
           </View>
           <Pressable style={s.gratRow} onPress={() => setPicking('gratitude')}>
             <View style={[s.gratIcon, { backgroundColor: t.night }]}>
-              <Moon size={20} color="#fff"/>
+              <View style={{ transform: [{ rotate: '180deg' }], marginTop: -6, marginLeft: 6 }}>
+                <Moon size={20} color="#fff"/>
+              </View>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[s.gratTime, { fontFamily: fonts.display, color: t.ink }]}>{gratitude}</Text>
-              <Text style={[s.gratSub, { color: t.muted, fontFamily: fonts.sans }]}>3 things · ~2 minutes</Text>
+              <Text style={[s.gratSub, { color: t.muted, fontFamily: fonts.sans }]}>
+                {gratitudeCount} {gratitudeCount === 1 ? 'thing' : 'things'} · ~{gratitudeCount === 1 ? '1 minute' : '2 minutes'}
+              </Text>
             </View>
           </Pressable>
+
+          <View style={s.countRow}>
+            <Text style={[s.countLabel, { color: t.muted, fontFamily: fonts.sans }]}>How many things to name</Text>
+            <View style={s.countBtns}>
+              {([1, 2, 3] as const).map(n => {
+                const active = gratitudeCount === n;
+                return (
+                  <Pressable
+                    key={n}
+                    style={[s.countBtn, {
+                      backgroundColor: active ? t.night : t.surface2,
+                      borderColor: active ? t.night : t.hairline,
+                    }]}
+                    onPress={() => update({ gratitudeCount: n })}
+                  >
+                    <Text style={[s.countBtnText, { color: active ? '#fff' : t.ink2, fontFamily: fonts.sansMedium }]}>{n}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
         </Card>
 
         {/* Other settings */}
@@ -238,6 +264,11 @@ const s = StyleSheet.create({
   gratIcon:       { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   gratTime:       { fontSize: 22 },
   gratSub:        { fontSize: 12, marginTop: 2 },
+  countRow:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 },
+  countLabel:     { fontSize: 13, flex: 1, marginRight: 12 },
+  countBtns:      { flexDirection: 'row', gap: 8 },
+  countBtn:       { width: 34, height: 34, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  countBtnText:   { fontSize: 14 },
   toggleRow:      { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 13 },
   toggleLabel:    { flex: 1, fontSize: 14 },
   quietPickers:   { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10 },
