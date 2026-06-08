@@ -22,6 +22,7 @@ import { resetDatabase } from '../db/database';
 import { DEFAULT_SETTINGS } from '../types';
 import type { UserSettings } from '../types';
 import type { RootStackParamList } from '../../App';
+import pkg from '../../package.json';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Settings'>;
 
@@ -177,6 +178,8 @@ export function SettingsScreen() {
             valueStyle={{ color: '#C0392B' }}
           />
         </Card>
+
+        <Text style={[s.version, { color: t.soft, fontFamily: fonts.mono }]}>v{pkg.version}</Text>
       </ScrollView>
     </Screen>
   );
@@ -194,4 +197,5 @@ const s = StyleSheet.create({
   recapBtn:    { paddingVertical: 16, borderRadius: 14, borderWidth: 1, alignItems: 'center' },
   toggleRow:   { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 13 },
   toggleLabel: { flex: 1, fontSize: 14 },
+  version:     { fontSize: 11, textAlign: 'center', marginTop: 8 },
 });
