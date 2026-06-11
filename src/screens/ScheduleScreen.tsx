@@ -5,7 +5,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Screen } from '../components/Screen';
 import { Card } from '../components/Card';
-import { PressableRow } from '../components/PressableRow';
 import { Display, DisplayItalic, Eyebrow } from '../components/Typography';
 import { ChevL, Moon } from '../components/Icons';
 import { useTheme } from '../theme/ThemeContext';
@@ -24,7 +23,7 @@ function fromDate(d: Date): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-const ANCHOR_COLORS = ['#6F8169', '#C97B5B', '#D4A24C'] as const;
+const ANCHOR_COLORS = ['#5C6268', '#C46A42', '#A8956B'] as const;
 
 export function ScheduleScreen() {
   const { t, fonts } = useTheme();

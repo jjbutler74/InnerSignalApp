@@ -20,7 +20,7 @@ type Route = RouteProp<RootStackParamList, 'AffirmationMoment'>;
 const SLOT_LABEL: Record<'anchor1' | 'anchor2' | 'anchor3', string> = {
   anchor1: 'Morning anchor',
   anchor2: 'Midday reset',
-  anchor3: 'Evening pause',
+  anchor3: 'Evening post',
 };
 
 const INHALE = 4;
@@ -28,10 +28,10 @@ const HOLD   = 4;
 const EXHALE = 6;
 const CYCLE  = INHALE + HOLD + EXHALE;
 
-const CREAM = '#F2EDE2';
-const AMBER = '#D4A24C';
-const SAGE  = '#6F8169';
-const DIM   = 'rgba(242,237,226,0.5)';
+const CREAM = '#ECEAE5';
+const AMBER = '#A8956B';
+const SAGE  = '#5C6268';
+const DIM   = 'rgba(236,234,229,0.5)';
 
 function formatTime(secs: number): string {
   return `0:${String(secs).padStart(2, '0')}`;

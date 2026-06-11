@@ -1,26 +1,26 @@
 export const lightTokens = {
   // Surfaces
-  bg:        '#F2EDE2',
-  surface:   '#FAF6EE',
-  surface2:  '#F6F0E2',
-  card:      '#FFFFFF',
-  divider:   '#E6DCC9',
-  hairline:  'rgba(42, 33, 27, 0.08)',
+  bg:        '#EDEBE6',
+  surface:   '#F5F3EF',
+  surface2:  '#EFEDE8',
+  card:      '#F5F3EF',
+  divider:   '#DDDAD3',
+  hairline:  'rgba(30, 30, 30, 0.09)',
 
   // Ink
-  ink:       '#2A211B',
-  ink2:      '#4A3F36',
-  muted:     '#8A7B6E',
-  soft:      '#B6A99A',
+  ink:       '#1E1E1E',
+  ink2:      '#3A3A3A',
+  muted:     '#7A7872',
+  soft:      '#ABA9A3',
 
-  // Accents
-  sage:      '#6F8169',
-  sageSoft:  '#DDE3D2',
-  terra:     '#C97B5B',
-  terraSoft: '#F2D9CC',
-  amber:     '#D4A24C',
-  amberSoft: '#F0DFB9',
-  night:     '#2D3B3F',
+  // Accents — Iron / Ember / Stone-gold / Charcoal
+  sage:      '#5C6268',  // Iron
+  sageSoft:  '#D4D6D8',
+  terra:     '#C46A42',  // Ember
+  terraSoft: '#EDD5C4',
+  amber:     '#A8956B',  // Stone-gold
+  amberSoft: '#E2D9C4',
+  night:     '#252528',  // Charcoal
 
   // Border radii
   rXs: 6,
@@ -32,16 +32,16 @@ export const lightTokens = {
 
 export const darkTokens = {
   ...lightTokens,
-  bg:       '#1A1612',
-  surface:  '#211C17',
-  surface2: '#251F1A',
-  card:     '#2A231D',
-  divider:  '#3A3128',
-  hairline: 'rgba(255,255,255,0.08)',
-  ink:      '#F2EDE2',
-  ink2:     '#D9D0BD',
-  muted:    '#9C8E80',
-  soft:     '#6B5F53',
+  bg:       '#141414',
+  surface:  '#1A1A1A',
+  surface2: '#1E1E1E',
+  card:     '#242424',
+  divider:  '#303030',
+  hairline: 'rgba(255,255,255,0.07)',
+  ink:      '#ECEAE5',
+  ink2:     '#C8C6C0',
+  muted:    '#8A8880',
+  soft:     '#5A5854',
 } as const;
 
 export type Tokens = {

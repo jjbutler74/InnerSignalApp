@@ -7,57 +7,57 @@ export async function seedIfEmpty(): Promise<void> {
   if ((existing?.n ?? 0) > 0) return;
 
   await insertPackWithAffirmations(
-    { name: 'Yours', tone: 'sage', isBuiltIn: true, isActive: true },
+    { name: 'Code', tone: 'sage', isBuiltIn: true, isActive: true },
     [
-      'I am allowed to take up space — and to move slowly when I need to.',
-      'I trust the version of me that keeps showing up.',
-      'My feelings are information, not verdicts.',
-      'I do not have to earn rest.',
-      'I am doing better than I think I am.',
+      'I stand by my word, especially when it costs me.',
+      'I do the next right thing; quietly, steadily, without excuse.',
+      'I am not here to be comfortable. I am here to be worthy of trust.',
+      'My character is built in the small choices no one sees.',
+      'I meet the day with discipline, courage, and restraint.',
     ],
   );
 
   await insertPackWithAffirmations(
-    { name: 'Confidence', tone: 'terra', isBuiltIn: true, isActive: true },
+    { name: 'Discipline', tone: 'terra', isBuiltIn: true, isActive: true },
     [
-      'My pace is mine. I do not need to apologize for it.',
-      'I have handled hard things before. I will handle this one too.',
-      'I am allowed to change my mind without explanation.',
-      'What I bring to the room is enough.',
-      'I do not need certainty to take the next step.',
+      'I do what needs doing before I do what is easy.',
+      'My standards do not depend on my mood.',
+      'I keep promises to myself because my word matters.',
+      'I train my mind the same way I train my body; with repetition and patience.',
+      'Small acts of discipline become a life of strength.',
     ],
   );
 
   await insertPackWithAffirmations(
-    { name: 'Calm', tone: 'amber', isBuiltIn: true, isActive: true },
+    { name: 'Composure', tone: 'amber', isBuiltIn: true, isActive: true },
     [
-      'I can return to my breath. I can return to now.',
-      'This moment does not require me to solve everything.',
-      'Slow is not behind. Slow is present.',
-      'The ground is still here. I am still here.',
-      'I let the urgency pass. It always does.',
+      'I stay calm because panic serves nothing.',
+      'I breathe, assess, and act.',
+      'Pressure reveals my training; it does not own me.',
+      'I do not need to react to every provocation.',
+      'A steady mind is a form of strength.',
     ],
   );
 
   await insertPackWithAffirmations(
     { name: 'Focus', tone: 'night', isBuiltIn: true, isActive: true },
     [
-      'One thing at a time is still progress.',
-      'I do not have to be perfect to be useful.',
-      'Distraction is not failure — returning is the practice.',
-      'I know what matters. I will come back to it.',
-      'Clarity comes when I stop fighting the noise.',
+      'I give my attention to what matters and withdraw it from what weakens me.',
+      'One task. Full effort. No drama.',
+      'I do not confuse motion with progress.',
+      'I finish the work in front of me.',
+      'My focus is a blade; I keep it sharp.',
     ],
   );
 
   await insertPackWithAffirmations(
-    { name: 'Worth', tone: 'soft', isBuiltIn: true, isActive: true },
+    { name: 'Honour', tone: 'soft', isBuiltIn: true, isActive: true },
     [
-      'I deserve what I am willing to give to others.',
-      'Being kind to myself is not indulgence — it is foundation.',
-      'My worth is not a performance review.',
-      'I am allowed to be a work in progress and still be enough.',
-      'The care I extend outward belongs inward too.',
+      'I protect those who depend on me.',
+      'I choose truth over approval.',
+      'I carry responsibility without resentment.',
+      'I am measured by my actions, not my intentions.',
+      'I leave people, places, and work better than I found them.',
     ],
   );
 }

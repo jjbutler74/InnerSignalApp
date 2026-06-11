@@ -10,18 +10,18 @@ import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'OnboardingWelcome'>;
 
-const CREAM     = '#F2EDE2';
-const SAGE_SOFT = '#DDE3D2';
-const TERRA     = '#C97B5B';
-const SAGE      = '#6F8169';
-const INK       = '#2A211B';
+const CREAM     = '#ECEAE5';
+const SAGE_SOFT = '#D4D6D8';
+const TERRA     = '#C46A42';
+const SAGE      = '#5C6268';
+const INK       = '#1E1E1E';
 
 export function OnboardingWelcomeScreen() {
   const { fonts } = useTheme();
   const nav = useNavigation<Nav>();
 
   return (
-    <DarkScreen bg="#2D3B3F">
+    <DarkScreen bg="#252528">
       <View style={s.root}>
         {/* Top bar */}
         <View style={s.topBar}>

@@ -16,7 +16,7 @@ import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'GratitudeComposer'>;
 
-const MOODS: Mood[] = ['Heavy', 'Mixed', 'Steady', 'Light', 'Lit up'];
+const MOODS: Mood[] = ['Heavy', 'Mixed', 'Steady', 'Clear', 'Resolved'];
 
 export function GratitudeComposerScreen() {
   const { t, fonts } = useTheme();
@@ -76,7 +76,7 @@ export function GratitudeComposerScreen() {
             {' today?'}
           </Display>
           <Text style={[s.sub, { color: t.muted, fontFamily: fonts.sans }]}>
-            Can be small, specific, true. A couple minutes is plenty.
+            Big or small. A couple minutes is enough.
           </Text>
 
           {/* Slots */}
@@ -198,5 +198,5 @@ const s = StyleSheet.create({
   moodBtn:     { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
   moodText:    { fontSize: 11 },
   saveBtn:     { paddingVertical: 16, borderRadius: 14, alignItems: 'center' },
-  saveBtnText: { fontSize: 14, color: '#F2EDE2' },
+  saveBtnText: { fontSize: 14, color: '#ECEAE5' },
 });

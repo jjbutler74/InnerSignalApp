@@ -15,7 +15,7 @@ const SLOTS: ((s: UserSettings) => SlotConfig)[] = [
     time: s.scheduleAnchor1,
     channelId: 'morning-affirmation',
     title: 'Good morning',
-    body: 'Your morning affirmation is ready.',
+    body: 'Morning affirmation is ready.',
     slot: 'anchor1',
   }),
   s => ({
@@ -36,7 +36,7 @@ const SLOTS: ((s: UserSettings) => SlotConfig)[] = [
     time: s.scheduleGratitude,
     channelId: 'gratitude-prompt',
     title: 'Evening gratitude',
-    body: 'What landed softly today?',
+    body: 'What landed today?',
     slot: 'gratitude',
   }),
 ];
@@ -146,7 +146,7 @@ export async function snoozeAffirmationNotification(settings: UserSettings): Pro
   await Notifications.scheduleNotificationAsync({
     content: {
       title: 'Ready when you are',
-      body: 'Your affirmation is still waiting.',
+      body: 'Affirmation is still waiting.',
       data: { slot: 'anchor1' },
       sound: settings.sound === 'silent' ? false : settings.sound,
     },

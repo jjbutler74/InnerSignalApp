@@ -78,9 +78,9 @@ export function TodayScreen() {
   const toMins = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
 
   const schedule = [
-    { time: scheduleAnchor1,   title: 'Morning anchor', sub: 'Set the tone', tone: 'sage',  slot: 'anchor1'   as const },
-    { time: scheduleAnchor2,   title: 'Midday reset',   sub: 'Coming up',   tone: 'terra', slot: 'anchor2'   as const },
-    { time: scheduleAnchor3,   title: 'Evening pause',  sub: 'Tonight',     tone: 'amber', slot: 'anchor3'   as const },
+    { time: scheduleAnchor1,   title: 'Morning anchor', sub: 'Hold the line', tone: 'sage',  slot: 'anchor1'   as const },
+    { time: scheduleAnchor2,   title: 'Midday reset',   sub: 'On course',    tone: 'terra', slot: 'anchor2'   as const },
+    { time: scheduleAnchor3,   title: 'Evening post',   sub: 'Close strong', tone: 'amber', slot: 'anchor3'   as const },
     { time: scheduleGratitude, title: 'Gratitude',      sub: gratitudeCount === 1 ? '1 thing' : `${gratitudeCount} things`, tone: 'night', slot: 'gratitude' as const },
   ] as const;
 
@@ -181,7 +181,7 @@ export function TodayScreen() {
               </Text>
             </Pressable>
             <Pressable onPress={() => nav.navigate('AffirmationMoment', { slot: activeSlot })}>
-              <Text style={[s.ghostBtn, { color: t.muted, fontFamily: fonts.sansMedium }]}>Read & breathe</Text>
+              <Text style={[s.ghostBtn, { color: t.muted, fontFamily: fonts.sansMedium }]}>Read & absorb</Text>
             </Pressable>
           </View>
         </Card>

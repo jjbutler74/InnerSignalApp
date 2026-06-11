@@ -270,7 +270,7 @@ export async function getTotalCounts(): Promise<{ totalSeen: number; totalEvenin
 export async function getWeeklyMoodValues(): Promise<(number | null)[]> {
   const db = await getDb();
   const moodScale: Record<string, number> = {
-    Heavy: 0, Mixed: 0.25, Steady: 0.5, Light: 0.75, 'Lit up': 1,
+    Heavy: 0, Mixed: 0.25, Steady: 0.5, Clear: 0.75, Resolved: 1,
   };
 
   const monday = getMondayOfCurrentWeek();

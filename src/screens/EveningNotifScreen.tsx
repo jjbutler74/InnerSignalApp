@@ -32,7 +32,7 @@ export function EveningNotifScreen() {
   }, []);
 
   return (
-    <DarkScreen bg="#1A2326">
+    <DarkScreen bg="#141414">
       <View style={s.root}>
         <View style={s.clockBlock}>
           <Text style={[s.clockTime, { fontFamily: fonts.sans }]}>{time}</Text>
@@ -46,7 +46,7 @@ export function EveningNotifScreen() {
               <Text style={[s.appName, { fontFamily: fonts.sansMedium }]}>InnerSignal</Text>
               <Text style={[s.cardTime, { fontFamily: fonts.sans }]}>{time}</Text>
             </View>
-            <Eyebrow style={{ color: '#2D3B3F', marginBottom: 6 }}>
+            <Eyebrow style={{ color: '#252528', marginBottom: 6 }}>
               {COUNT_WORDS[gratitudeCount]} good {gratitudeCount === 1 ? 'thing' : 'things'}
             </Eyebrow>
             <Text style={[s.affText, { fontFamily: fonts.display }]}>
@@ -69,8 +69,8 @@ export function EveningNotifScreen() {
   );
 }
 
-const CREAM = '#F2EDE2';
-const INK   = '#2A211B';
+const CREAM = '#ECEAE5';
+const INK   = '#1E1E1E';
 
 const s = StyleSheet.create({
   root:            { flex: 1, paddingHorizontal: 22 },
@@ -79,13 +79,13 @@ const s = StyleSheet.create({
   clockDate:       { fontSize: 14, color: 'rgba(242,237,226,0.7)', marginTop: 6 },
   card:            { backgroundColor: 'rgba(250,246,238,0.96)', borderRadius: 22, padding: 16 },
   cardHeader:      { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  appIcon:         { width: 18, height: 18, borderRadius: 5, backgroundColor: '#2D3B3F', alignItems: 'center', justifyContent: 'center' },
+  appIcon:         { width: 18, height: 18, borderRadius: 5, backgroundColor: '#252528', alignItems: 'center', justifyContent: 'center' },
   appName:         { fontSize: 12, color: '#4A3F36', flex: 1 },
   cardTime:        { fontSize: 11, color: '#8A7B6E' },
   affText:         { fontSize: 22, lineHeight: 27, color: INK },
   actions:         { flexDirection: 'row', gap: 8, marginTop: 12 },
   primaryBtn:      { flex: 1, backgroundColor: INK, borderRadius: 999, paddingVertical: 10, alignItems: 'center' },
   primaryBtnText:  { fontSize: 13, color: CREAM },
-  secondaryBtn:    { backgroundColor: '#F6F0E2', borderRadius: 999, paddingVertical: 10, paddingHorizontal: 14 },
+  secondaryBtn:    { backgroundColor: '#EFEDE8', borderRadius: 999, paddingVertical: 10, paddingHorizontal: 14 },
   secondaryBtnText:{ fontSize: 13, color: INK },
 });

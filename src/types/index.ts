@@ -1,5 +1,5 @@
 export type Tone = 'sage' | 'terra' | 'amber' | 'soft' | 'night';
-export type Mood = 'Heavy' | 'Mixed' | 'Steady' | 'Light' | 'Lit up';
+export type Mood = 'Heavy' | 'Mixed' | 'Steady' | 'Clear' | 'Resolved';
 export type Sound = 'bell' | 'chime' | 'silent';
 export type Theme = 'light' | 'dark' | 'auto';
 export type Slot = 'anchor1' | 'anchor2' | 'anchor3' | 'gratitude';
@@ -57,8 +57,8 @@ export const MOOD_COLORS: Record<Mood, string> = {
   Heavy:   '#A88276',
   Mixed:   '#C9A86B',
   Steady:  '#9CAE85',
-  Light:   '#7AA89A',
-  'Lit up': '#C97B5B',
+  Clear:   '#7AA89A',
+  Resolved: '#C46A42'
 };
 
 export const DEFAULT_SETTINGS: UserSettings = {
