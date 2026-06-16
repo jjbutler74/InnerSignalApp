@@ -12,8 +12,8 @@ type Nav = NativeStackNavigationProp<RootStackParamList, 'OnboardingWelcome'>;
 
 const CREAM     = '#ECEAE5';
 const SAGE_SOFT = '#D4D6D8';
-const TERRA     = '#C46A42';
-const SAGE      = '#5C6268';
+const TERRA     = '#CC6B49';
+const SAGE      = '#7A876B';
 const INK       = '#1E1E1E';
 
 export function OnboardingWelcomeScreen() {

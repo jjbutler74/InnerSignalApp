@@ -14,10 +14,10 @@ export const lightTokens = {
   soft:      '#ABA9A3',
 
   // Accents — Iron / Ember / Stone-gold / Charcoal
-  sage:      '#5C6268',  // Iron
-  sageSoft:  '#D4D6D8',
-  terra:     '#C46A42',  // Ember
-  terraSoft: '#EDD5C4',
+  sage:      '#7A876B',  // Iron-olive
+  sageSoft:  '#D6DDD0',
+  terra:     '#CC6B49',  // Ember
+  terraSoft: '#EED6C6',
   amber:     '#A8956B',  // Stone-gold
   amberSoft: '#E2D9C4',
   night:     '#252528',  // Charcoal

@@ -103,7 +103,7 @@ const s = StyleSheet.create({
   clockDate:       { fontSize: 14, color: 'rgba(242,237,226,0.7)', marginTop: 6 },
   card:            { backgroundColor: 'rgba(250,246,238,0.96)', borderRadius: 22, padding: 16 },
   cardHeader:      { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  appIcon:         { width: 18, height: 18, borderRadius: 5, backgroundColor: '#5C6268', alignItems: 'center', justifyContent: 'center' },
+  appIcon:         { width: 18, height: 18, borderRadius: 5, backgroundColor: '#7A876B', alignItems: 'center', justifyContent: 'center' },
   appName:         { fontSize: 12, color: '#4A3F36', flex: 1 },
   cardTime:        { fontSize: 11, color: '#8A7B6E' },
   affText:         { fontSize: 22, lineHeight: 27, color: INK, letterSpacing: -0.2 },

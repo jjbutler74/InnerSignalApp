@@ -24,7 +24,7 @@ export async function setupChannels(sound: SoundSetting = 'bell') {
     importance: Notifications.AndroidImportance.DEFAULT,
     sound: channelSound,
     vibrationPattern: [0, 250, 250, 250],
-    lightColor: '#C46A42',
+    lightColor: '#CC6B49',
   });
   await Notifications.setNotificationChannelAsync('gratitude-prompt', {
     name: 'Gratitude prompt',

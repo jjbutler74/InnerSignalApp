@@ -30,7 +30,7 @@ const CYCLE  = INHALE + HOLD + EXHALE;
 
 const CREAM = '#ECEAE5';
 const AMBER = '#A8956B';
-const SAGE  = '#5C6268';
+const SAGE  = '#7A876B';
 const DIM   = 'rgba(236,234,229,0.5)';
 
 function formatTime(secs: number): string {

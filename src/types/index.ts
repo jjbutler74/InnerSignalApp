@@ -58,7 +58,7 @@ export const MOOD_COLORS: Record<Mood, string> = {
   Mixed:   '#C9A86B',
   Steady:  '#9CAE85',
   Clear:   '#7AA89A',
-  Resolved: '#C46A42'
+  Resolved: '#CC6B49'
 };
 
 export const DEFAULT_SETTINGS: UserSettings = {
