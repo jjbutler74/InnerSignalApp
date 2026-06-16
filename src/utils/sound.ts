@@ -14,7 +14,7 @@ export async function playPreview(sound: 'bell' | 'chime'): Promise<void> {
       _player = null;
     }
     await setAudioModeAsync({
-      playsInSilentMode: true,
+      playsInSilentMode: false,
       shouldRouteThroughEarpiece: false,
     });
     const player = createAudioPlayer(SOURCES[sound]);

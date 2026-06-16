@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, Alert, Share } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { setupChannels } from '../notifications/channels';
 import { scheduleAllNotifications } from '../notifications/scheduler';
@@ -19,6 +19,7 @@ import { useAffirmationStore } from '../store/affirmationStore';
 import { useJournalStore } from '../store/journalStore';
 import { useStatsStore } from '../store/statsStore';
 import { resetDatabase } from '../db/database';
+import { getJournalEntries } from '../db/queries';
 import { DEFAULT_SETTINGS } from '../types';
 import type { UserSettings } from '../types';
 import type { RootStackParamList } from '../../App';
@@ -92,6 +93,41 @@ export function SettingsScreen() {
         },
       ]
     );
+  };
+
+  const handleExport = async () => {
+    try {
+      const entries = await getJournalEntries();
+      const st = useSettingsStore.getState();
+      const data = {
+        exportedAt: new Date().toISOString(),
+        appVersion: pkg.version,
+        settings: {
+          name: st.name,
+          schedule: {
+            morning:  st.scheduleAnchor1,
+            midday:   st.scheduleAnchor2,
+            evening:  st.scheduleAnchor3,
+            gratitude: st.scheduleGratitude,
+          },
+          gratitudeCount: st.gratitudeCount,
+          sound: st.sound,
+          theme: st.theme,
+          weekendMode: st.weekendMode,
+        },
+        journal: entries.map(e => ({
+          date:  e.date,
+          mood:  e.mood,
+          items: e.items,
+        })),
+      };
+      await Share.share({
+        message: JSON.stringify(data, null, 2),
+        title: 'InnerSignal export',
+      });
+    } catch {
+      Alert.alert('Export failed', 'Could not export your data.');
+    }
   };
 
   return (
@@ -171,9 +207,14 @@ export function SettingsScreen() {
         <Eyebrow style={{ marginTop: 32, marginBottom: 8 }}>Account</Eyebrow>
         <Card padding={0} style={{ marginBottom: 20 }}>
           <PressableRow
+            label="Export data"
+            value="JSON"
+            topBorder={false}
+            onPress={handleExport}
+          />
+          <PressableRow
             label="Start fresh"
             value="Reset app"
-            topBorder={false}
             onPress={handleReset}
             valueStyle={{ color: '#C0392B' }}
           />

@@ -42,7 +42,11 @@ export function EveningNotifScreen() {
         <View style={{ flex: 1, justifyContent: 'flex-end' }}>
           <View style={s.card}>
             <View style={s.cardHeader}>
-              <View style={s.appIcon}><Moon size={11} color="#fff"/></View>
+              <View style={s.appIcon}>
+                <View style={{ transform: [{ rotate: '180deg' }], marginTop: -3, marginLeft: 3 }}>
+                  <Moon size={11} color="#fff"/>
+                </View>
+              </View>
               <Text style={[s.appName, { fontFamily: fonts.sansMedium }]}>InnerSignal</Text>
               <Text style={[s.cardTime, { fontFamily: fonts.sans }]}>{time}</Text>
             </View>
@@ -58,7 +62,7 @@ export function EveningNotifScreen() {
                 <Text style={[s.primaryBtnText, { fontFamily: fonts.sansMedium }]}>Begin</Text>
               </Pressable>
               <Pressable style={s.secondaryBtn} onPress={() => nav.goBack()}>
-                <Text style={[s.secondaryBtnText, { fontFamily: fonts.sansMedium }]}>Tomorrow</Text>
+                <Text style={[s.secondaryBtnText, { fontFamily: fonts.sansMedium }]}>Not now</Text>
               </Pressable>
             </View>
           </View>
