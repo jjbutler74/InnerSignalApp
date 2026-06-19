@@ -63,6 +63,7 @@ export function TodayScreen() {
   const slotAffirmations         = useAffirmationStore(s => s.slotAffirmations);
   const toggleFavorite           = useAffirmationStore(s => s.toggleFavorite);
   const refreshDailyAffirmations = useAffirmationStore(s => s.refreshDailyAffirmations);
+  const affirmationsLoaded       = useAffirmationStore(s => s.loaded);
 
   const streakDays          = useStatsStore(s => s.streakDays);
   const weeklyCompletions   = useStatsStore(s => s.weeklyCompletions);
@@ -189,23 +190,30 @@ export function TodayScreen() {
             <View style={s.cardHeader}>
               <Eyebrow style={{ color: t.sage }}>Today's {SLOT_LABEL[activeSlot]} Affirmation</Eyebrow>
             </View>
-            <Display style={{ fontSize: 22, lineHeight: 28, marginTop: 4 }}>
-              {cardAffirmation?.text ?? 'Loading your affirmation…'}
+            <Display style={{ fontSize: 22, lineHeight: 28, marginTop: 4, ...(cardAffirmation ? {} : { color: t.muted }) }}>
+              {cardAffirmation?.text ?? (affirmationsLoaded ? 'No affirmations available.' : 'Loading your affirmation…')}
             </Display>
-            <View style={s.cardActions}>
-              <Pressable
-                style={[s.actionBtn, { backgroundColor: isFav ? t.terra : t.ink }]}
-                onPress={() => cardAffirmation && toggleFavorite(cardAffirmation.id)}
-              >
-                <Heart size={14} color={t.bg}/>
-                <Text style={[s.actionBtnText, { color: t.bg, fontFamily: fonts.sansMedium }]}>
-                  {isFav ? 'Saved' : 'Save to favorites'}
-                </Text>
-              </Pressable>
-              <Pressable onPress={() => nav.navigate('AffirmationMoment', { slot: activeSlot })}>
-                <Text style={[s.ghostBtn, { color: t.muted, fontFamily: fonts.sansMedium }]}>Read & absorb</Text>
-              </Pressable>
-            </View>
+            {!cardAffirmation && affirmationsLoaded && (
+              <Text style={[s.comingSoonSub, { color: t.soft, fontFamily: fonts.sans }]}>
+                Add an affirmation in your library to get started.
+              </Text>
+            )}
+            {cardAffirmation && (
+              <View style={s.cardActions}>
+                <Pressable
+                  style={[s.actionBtn, { backgroundColor: isFav ? t.terra : t.ink }]}
+                  onPress={() => toggleFavorite(cardAffirmation.id)}
+                >
+                  <Heart size={14} color={t.bg}/>
+                  <Text style={[s.actionBtnText, { color: t.bg, fontFamily: fonts.sansMedium }]}>
+                    {isFav ? 'Saved' : 'Save to favorites'}
+                  </Text>
+                </Pressable>
+                <Pressable onPress={() => nav.navigate('AffirmationMoment', { slot: activeSlot })}>
+                  <Text style={[s.ghostBtn, { color: t.muted, fontFamily: fonts.sansMedium }]}>Read & absorb</Text>
+                </Pressable>
+              </View>
+            )}
           </Card>
         )}
 

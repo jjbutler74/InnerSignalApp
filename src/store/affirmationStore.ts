@@ -22,6 +22,7 @@ interface AffirmationStore {
   load: () => Promise<void>;
   refreshDailyAffirmations: () => void;
   selectSlotAffirmation: (slot: AnchorSlot) => void;
+  validateSlotAffirmations: () => void;
   toggleFavorite: (id: string) => Promise<void>;
   markSeen: (id: string) => Promise<void>;
   addAffirmation: (text: string, packId: string) => Promise<void>;
@@ -67,6 +68,10 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
       get().selectSlotAffirmation('anchor1');
       get().selectSlotAffirmation('anchor2');
       get().selectSlotAffirmation('anchor3');
+    } else {
+      // Same day — make sure each locked-in pick is still valid (not
+      // deleted, not filtered out by favoritesOnly/pack changes since pick).
+      get().validateSlotAffirmations();
     }
 
     // Sync activeSlot and derive activeAffirmation
@@ -83,9 +88,16 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
     const { favoritesOnly } = useSettingsStore.getState();
     const favorites = fromActivePacks.filter(a => a.isFavorite);
     const pool = favoritesOnly && favorites.length > 0 ? favorites : fromActivePacks;
-    if (!pool.length) return;
 
-    // Deterministic date+slot hash, biased toward lower seenCount
+    if (!pool.length) {
+      set(s => ({ slotAffirmations: { ...s.slotAffirmations, [slot]: null } }));
+      return;
+    }
+
+    // Deterministic date+slot hash, biased toward lower seenCount.
+    // If the pool has shrunk (e.g. a pick was deleted), this naturally
+    // lands on a different, still-available affirmation. A pool of one
+    // always resolves to that single affirmation.
     const sorted = [...pool].sort((a, b) => a.seenCount - b.seenCount);
     const dateSlotKey = `${today()}-${slot}`;
     let hash = 0;
@@ -101,6 +113,25 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
     set(s => ({
       slotAffirmations: { ...s.slotAffirmations, [slot]: candidate ?? pool[0] },
     }));
+  },
+
+  // Re-checks each locked-in slot pick against the current pool and
+  // repicks any that are no longer valid (deleted, or filtered out by
+  // favoritesOnly/active-pack changes made after the daily lock-in).
+  validateSlotAffirmations: () => {
+    const { packs, affirmations, slotAffirmations } = get();
+    const activePacks = new Set(packs.filter(p => p.isActive).map(p => p.id));
+    const fromActivePacks = affirmations.filter(a => activePacks.has(a.packId));
+    const { favoritesOnly } = useSettingsStore.getState();
+    const favorites = fromActivePacks.filter(a => a.isFavorite);
+    const pool = favoritesOnly && favorites.length > 0 ? favorites : fromActivePacks;
+    const poolIds = new Set(pool.map(a => a.id));
+
+    (['anchor1', 'anchor2', 'anchor3'] as const).forEach(slot => {
+      const current = slotAffirmations[slot];
+      if (current && poolIds.has(current.id)) return;
+      get().selectSlotAffirmation(slot);
+    });
   },
 
   toggleFavorite: async (id) => {
@@ -138,7 +169,8 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
     await deleteAffirmation(id);
     set(s => ({
       affirmations: s.affirmations.filter(a => a.id !== id),
-      activeAffirmation: s.activeAffirmation?.id === id ? null : s.activeAffirmation,
     }));
+    get().validateSlotAffirmations();
+    set(s => ({ activeAffirmation: s.slotAffirmations[s.activeSlot] ?? null }));
   },
 }));

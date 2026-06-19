@@ -125,52 +125,62 @@ export function AffirmationMomentScreen() {
 
         {/* Affirmation text */}
         <View style={s.center}>
-          <Text style={[s.affText, { fontFamily: fonts.display, color: CREAM }]}>
-            {italicPart ? (
-              <>
-                <Text style={{ fontStyle: 'italic', color: AMBER }}>{italicPart}</Text>
-                {restPart}
-              </>
-            ) : restPart}
-          </Text>
+          {affirmation ? (
+            <>
+              <Text style={[s.affText, { fontFamily: fonts.display, color: CREAM }]}>
+                {italicPart ? (
+                  <>
+                    <Text style={{ fontStyle: 'italic', color: AMBER }}>{italicPart}</Text>
+                    {restPart}
+                  </>
+                ) : restPart}
+              </Text>
 
-          {/* Breathing bar */}
-          <View style={s.breathRow}>
-            <Text style={[s.breathTimer, { color: DIM, fontFamily: fonts.mono }]}>
-              {formatTime(elapsed)} / {formatTime(CYCLE)}
+              {/* Breathing bar */}
+              <View style={s.breathRow}>
+                <Text style={[s.breathTimer, { color: DIM, fontFamily: fonts.mono }]}>
+                  {formatTime(elapsed)} / {formatTime(CYCLE)}
+                </Text>
+                <View style={[s.breathTrack, { backgroundColor: 'rgba(255,255,255,0.12)' }]}>
+                  <Animated.View style={[s.breathFill, { backgroundColor: AMBER, width: fillWidth }]}/>
+                </View>
+              </View>
+              <Text style={[s.breathHint, { color: DIM, fontFamily: fonts.display }]}>
+                {breathPhase} · {INHALE}s in · {HOLD}s hold · {EXHALE}s out
+              </Text>
+            </>
+          ) : (
+            <Text style={[s.affText, { fontFamily: fonts.display, color: DIM, fontSize: 24, lineHeight: 30 }]}>
+              No affirmations available. Add one in your library to get started.
             </Text>
-            <View style={[s.breathTrack, { backgroundColor: 'rgba(255,255,255,0.12)' }]}>
-              <Animated.View style={[s.breathFill, { backgroundColor: AMBER, width: fillWidth }]}/>
-            </View>
-          </View>
-          <Text style={[s.breathHint, { color: DIM, fontFamily: fonts.display }]}>
-            {breathPhase} · {INHALE}s in · {HOLD}s hold · {EXHALE}s out
-          </Text>
+          )}
         </View>
 
         {/* Actions */}
-        <View style={s.actions}>
-          <Pressable
-            style={[s.saveBtn, { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.15)' }]}
-            onPress={handleSave}
-          >
-            <Heart size={16} color={affirmation?.isFavorite ? AMBER : 'rgba(242,237,226,0.7)'}/>
-            <Text style={[s.saveBtnText, { color: 'rgba(242,237,226,0.7)', fontFamily: fonts.sansMedium }]}>
-              {affirmation?.isFavorite ? 'Saved' : 'Save'}
-            </Text>
-          </Pressable>
-          {alreadyDone ? (
-            <Pressable style={[s.feltBtn, { backgroundColor: SAGE }]} onPress={() => nav.navigate('Today')}>
-              <Close size={16} color="#fff"/>
-              <Text style={[s.feltBtnText, { fontFamily: fonts.sansMedium }]}>Close</Text>
+        {affirmation && (
+          <View style={s.actions}>
+            <Pressable
+              style={[s.saveBtn, { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.15)' }]}
+              onPress={handleSave}
+            >
+              <Heart size={16} color={affirmation.isFavorite ? AMBER : 'rgba(242,237,226,0.7)'}/>
+              <Text style={[s.saveBtnText, { color: 'rgba(242,237,226,0.7)', fontFamily: fonts.sansMedium }]}>
+                {affirmation.isFavorite ? 'Saved' : 'Save'}
+              </Text>
             </Pressable>
-          ) : (
-            <Pressable style={[s.feltBtn, { backgroundColor: SAGE }]} onPress={handleFeltIt}>
-              <Check size={16} color="#fff"/>
-              <Text style={[s.feltBtnText, { fontFamily: fonts.sansMedium }]}>I felt it</Text>
-            </Pressable>
-          )}
-        </View>
+            {alreadyDone ? (
+              <Pressable style={[s.feltBtn, { backgroundColor: SAGE }]} onPress={() => nav.navigate('Today')}>
+                <Close size={16} color="#fff"/>
+                <Text style={[s.feltBtnText, { fontFamily: fonts.sansMedium }]}>Close</Text>
+              </Pressable>
+            ) : (
+              <Pressable style={[s.feltBtn, { backgroundColor: SAGE }]} onPress={handleFeltIt}>
+                <Check size={16} color="#fff"/>
+                <Text style={[s.feltBtnText, { fontFamily: fonts.sansMedium }]}>I felt it</Text>
+              </Pressable>
+            )}
+          </View>
+        )}
       </View>
     </DarkScreen>
   );
