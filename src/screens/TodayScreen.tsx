@@ -29,6 +29,13 @@ function formattedDate(): string {
   }).toUpperCase();
 }
 
+function fmtTime(t: string): string {
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
 function nextAnchorLabel(a1: string, a2: string, a3: string): string {
   const now = new Date();
   const mins = now.getHours() * 60 + now.getMinutes();
@@ -38,6 +45,8 @@ function nextAnchorLabel(a1: string, a2: string, a3: string): string {
   }
   return 'tomorrow';
 }
+
+const SLOT_LABEL = { anchor1: 'Morning', anchor2: 'Midday', anchor3: 'Evening' } as const;
 
 export function TodayScreen() {
   const { t, fonts } = useTheme();
@@ -50,20 +59,18 @@ export function TodayScreen() {
   const scheduleGratitude = useSettingsStore(s => s.scheduleGratitude);
   const gratitudeCount    = useSettingsStore(s => s.gratitudeCount);
 
-  const activeAffirmation        = useAffirmationStore(s => s.activeAffirmation);
   const activeSlot               = useAffirmationStore(s => s.activeSlot);
+  const slotAffirmations         = useAffirmationStore(s => s.slotAffirmations);
   const toggleFavorite           = useAffirmationStore(s => s.toggleFavorite);
-  const refreshActiveAffirmation = useAffirmationStore(s => s.refreshActiveAffirmation);
+  const refreshDailyAffirmations = useAffirmationStore(s => s.refreshDailyAffirmations);
 
-  const SLOT_LABEL = { anchor1: 'Morning', anchor2: 'Midday', anchor3: 'Evening' } as const;
-
-  const streakDays           = useStatsStore(s => s.streakDays);
-  const weeklyCompletions    = useStatsStore(s => s.weeklyCompletions);
-  const completedSlotsToday  = useStatsStore(s => s.completedSlotsToday);
-  const refreshIfNewDay      = useStatsStore(s => s.refreshIfNewDay);
+  const streakDays          = useStatsStore(s => s.streakDays);
+  const weeklyCompletions   = useStatsStore(s => s.weeklyCompletions);
+  const completedSlotsToday = useStatsStore(s => s.completedSlotsToday);
+  const refreshIfNewDay     = useStatsStore(s => s.refreshIfNewDay);
 
   useFocusEffect(useCallback(() => {
-    refreshActiveAffirmation();
+    refreshDailyAffirmations();
     refreshIfNewDay();
   }, []));
 
@@ -73,9 +80,13 @@ export function TodayScreen() {
   const displayName = name || 'there';
   const nextAnchor  = nextAnchorLabel(scheduleAnchor1, scheduleAnchor2, scheduleAnchor3);
 
-  const now = new Date();
-  const nowMins = now.getHours() * 60 + now.getMinutes();
-  const toMins = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+  const toMins = (tm: string) => { const [h, m] = tm.split(':').map(Number); return h * 60 + m; };
+  const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
+
+  // Main card is time-gated: blank/coming-soon before the morning anchor
+  const beforeFirstAnchor = nowMins < toMins(scheduleAnchor1);
+  const cardAffirmation   = slotAffirmations[activeSlot];
+  const isFav             = cardAffirmation?.isFavorite ?? false;
 
   const schedule = [
     { time: scheduleAnchor1,   title: 'Morning anchor', sub: 'Hold the line', tone: 'sage',  slot: 'anchor1'   as const },
@@ -84,21 +95,22 @@ export function TodayScreen() {
     { time: scheduleGratitude, title: 'Gratitude',      sub: gratitudeCount === 1 ? '1 thing' : `${gratitudeCount} things`, tone: 'night', slot: 'gratitude' as const },
   ] as const;
 
+  // Anchor rows: 'done' only if the user actually read it (not just time-based).
+  // 'next' = current active time window. 'pending' = future or past-unread.
+  const anchorStatus = (slot: 'anchor1' | 'anchor2' | 'anchor3') => {
+    if (completedSlotsToday.has(slot)) return 'done';
+    const start = toMins(slot === 'anchor1' ? scheduleAnchor1 : slot === 'anchor2' ? scheduleAnchor2 : scheduleAnchor3);
+    const end   = slot === 'anchor1' ? toMins(scheduleAnchor2)
+                : slot === 'anchor2' ? toMins(scheduleAnchor3)
+                : Infinity;
+    if (nowMins >= start && nowMins < end) return 'next';
+    return 'pending';
+  };
+
   const statusOf = (time: string) => {
     const m = toMins(time);
     if (m < nowMins - 30) return 'done';
     if (m <= nowMins + 60) return 'next';
-    return 'pending';
-  };
-
-  // An anchor is only crossed off once it's actually been read ("I felt it"),
-  // or once the time-of-day has moved on to a later anchor — never just
-  // because its scheduled time passed while it sat unread.
-  const SLOT_ORDER = { anchor1: 0, anchor2: 1, anchor3: 2 } as const;
-  const anchorStatus = (slot: 'anchor1' | 'anchor2' | 'anchor3') => {
-    if (completedSlotsToday.has(slot)) return 'done';
-    if (SLOT_ORDER[slot] < SLOT_ORDER[activeSlot]) return 'done';
-    if (slot === activeSlot) return 'next';
     return 'pending';
   };
 
@@ -121,10 +133,7 @@ export function TodayScreen() {
 
   const weekBars = weeklyCompletions.map(done => done ? 1 : 0);
   const weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-  const todayDow = (new Date().getDay() + 6) % 7; // 0=Mon
-
-  const affText = activeAffirmation?.text ?? 'Loading your affirmation…';
-  const isFav   = activeAffirmation?.isFavorite ?? false;
+  const todayDow = (new Date().getDay() + 6) % 7;
 
   return (
     <Screen>
@@ -150,7 +159,7 @@ export function TodayScreen() {
           {'.'}
         </Display>
         <Text style={[s.subtext, { color: t.muted, fontFamily: fonts.sans }]}>
-          {`Your first anchor lands at ${nextAnchor}.`}
+          {`Your next anchor lands at ${nextAnchor}.`}
         </Text>
       </View>
 
@@ -162,29 +171,43 @@ export function TodayScreen() {
       </View>
 
       <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Today's affirmation card */}
-        <Card style={{ marginBottom: 12 }}>
-          <View style={s.cardHeader}>
-            <Eyebrow style={{ color: t.sage }}>Today's {SLOT_LABEL[activeSlot]} Affirmation</Eyebrow>
-          </View>
-          <Display style={{ fontSize: 22, lineHeight: 28, marginTop: 4 }}>
-            {affText}
-          </Display>
-          <View style={s.cardActions}>
-            <Pressable
-              style={[s.actionBtn, { backgroundColor: isFav ? t.terra : t.ink }]}
-              onPress={() => activeAffirmation && toggleFavorite(activeAffirmation.id)}
-            >
-              <Heart size={14} color={t.bg}/>
-              <Text style={[s.actionBtnText, { color: t.bg, fontFamily: fonts.sansMedium }]}>
-                {isFav ? 'Saved' : 'Save to favorites'}
-              </Text>
-            </Pressable>
-            <Pressable onPress={() => nav.navigate('AffirmationMoment', { slot: activeSlot })}>
-              <Text style={[s.ghostBtn, { color: t.muted, fontFamily: fonts.sansMedium }]}>Read & absorb</Text>
-            </Pressable>
-          </View>
-        </Card>
+
+        {/* Today's affirmation card — blank before morning anchor */}
+        {beforeFirstAnchor ? (
+          <Card style={{ marginBottom: 12 }}>
+            <Eyebrow style={{ color: t.sage }}>Morning Affirmation</Eyebrow>
+            <Display style={{ fontSize: 22, lineHeight: 28, marginTop: 4, color: t.muted }}>
+              {'Arrives at '}
+              <DisplayItalic style={{ fontSize: 22, color: t.muted }}>{fmtTime(scheduleAnchor1)}</DisplayItalic>
+            </Display>
+            <Text style={[s.comingSoonSub, { color: t.soft, fontFamily: fonts.sans }]}>
+              Your affirmations for today are set and ready.
+            </Text>
+          </Card>
+        ) : (
+          <Card style={{ marginBottom: 12 }}>
+            <View style={s.cardHeader}>
+              <Eyebrow style={{ color: t.sage }}>Today's {SLOT_LABEL[activeSlot]} Affirmation</Eyebrow>
+            </View>
+            <Display style={{ fontSize: 22, lineHeight: 28, marginTop: 4 }}>
+              {cardAffirmation?.text ?? 'Loading your affirmation…'}
+            </Display>
+            <View style={s.cardActions}>
+              <Pressable
+                style={[s.actionBtn, { backgroundColor: isFav ? t.terra : t.ink }]}
+                onPress={() => cardAffirmation && toggleFavorite(cardAffirmation.id)}
+              >
+                <Heart size={14} color={t.bg}/>
+                <Text style={[s.actionBtnText, { color: t.bg, fontFamily: fonts.sansMedium }]}>
+                  {isFav ? 'Saved' : 'Save to favorites'}
+                </Text>
+              </Pressable>
+              <Pressable onPress={() => nav.navigate('AffirmationMoment', { slot: activeSlot })}>
+                <Text style={[s.ghostBtn, { color: t.muted, fontFamily: fonts.sansMedium }]}>Read & absorb</Text>
+              </Pressable>
+            </View>
+          </Card>
+        )}
 
         {/* Day schedule */}
         <Card padding={0} style={{ marginBottom: 12 }}>
@@ -192,11 +215,18 @@ export function TodayScreen() {
             const status = item.slot === 'gratitude'
               ? (gratitudeDone ? 'done' : statusOf(item.time) === 'done' ? 'next' : statusOf(item.time))
               : anchorStatus(item.slot);
-            const canTap = status === 'next' || (item.slot === 'gratitude' && status === 'pending');
+            // Anchor rows are always tappable (including crossed-off, to re-read).
+            // Gratitude row: tappable until done.
+            const canTap = item.slot === 'gratitude'
+              ? (status !== 'done')
+              : true;
             return (
               <Pressable
                 key={item.time}
-                onPress={canTap ? () => item.slot === 'gratitude' ? nav.navigate('EveningNotif') : nav.navigate('AffirmationMoment', { slot: item.slot }) : undefined}
+                onPress={canTap ? () => item.slot === 'gratitude'
+                  ? nav.navigate('EveningNotif')
+                  : nav.navigate('AffirmationMoment', { slot: item.slot })
+                  : undefined}
                 style={[s.scheduleRow, i > 0 && { borderTopWidth: 1, borderTopColor: t.hairline }]}
               >
                 <View style={[s.scheduleIcon, {
@@ -265,30 +295,31 @@ export function TodayScreen() {
 }
 
 const s = StyleSheet.create({
-  header:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 22, paddingVertical: 14 },
-  headerLeft:   { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoBox:      { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  logoText:     { fontSize: 15 },
-  greeting:     { paddingHorizontal: 22, paddingBottom: 8 },
-  subtext:      { fontSize: 14, marginTop: 8 },
-  chips:        { flexDirection: 'row', gap: 8, paddingHorizontal: 22, paddingVertical: 12 },
-  scroll:       { flex: 1 },
-  scrollContent:{ paddingHorizontal: 22, paddingBottom: 24 },
-  cardHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  cardActions:  { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 14 },
-  actionBtn:    { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 999 },
-  actionBtnText:{ fontSize: 13 },
-  ghostBtn:     { fontSize: 13 },
-  scheduleRow:  { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 18, paddingVertical: 10 },
-  scheduleIcon: { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  scheduleTitle:{ fontSize: 14, lineHeight: 17 },
-  scheduleSub:  { fontSize: 12, lineHeight: 16, marginTop: 1 },
-  scheduleTime: { fontSize: 12 },
-  statsRow:     { flexDirection: 'row' },
-  streakRow:    { flexDirection: 'row', alignItems: 'baseline', marginTop: 4 },
-  streakUnit:   { fontSize: 12 },
-  weekChart:    { flexDirection: 'row', gap: 4, marginTop: 8, alignItems: 'flex-end', height: 64 },
-  weekBar:      { borderRadius: 3 },
-  weekLabels:   { flexDirection: 'row', marginTop: 6 },
-  weekLabel:    { flex: 1, textAlign: 'center', fontSize: 10 },
+  header:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 22, paddingVertical: 14 },
+  headerLeft:    { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  logoBox:       { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  logoText:      { fontSize: 15 },
+  greeting:      { paddingHorizontal: 22, paddingBottom: 8 },
+  subtext:       { fontSize: 14, marginTop: 8 },
+  chips:         { flexDirection: 'row', gap: 8, paddingHorizontal: 22, paddingVertical: 12 },
+  scroll:        { flex: 1 },
+  scrollContent: { paddingHorizontal: 22, paddingBottom: 24 },
+  cardHeader:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  cardActions:   { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 14 },
+  actionBtn:     { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 999 },
+  actionBtnText: { fontSize: 13 },
+  ghostBtn:      { fontSize: 13 },
+  comingSoonSub: { fontSize: 13, marginTop: 10 },
+  scheduleRow:   { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 18, paddingVertical: 10 },
+  scheduleIcon:  { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  scheduleTitle: { fontSize: 14, lineHeight: 17 },
+  scheduleSub:   { fontSize: 12, lineHeight: 16, marginTop: 1 },
+  scheduleTime:  { fontSize: 12 },
+  statsRow:      { flexDirection: 'row' },
+  streakRow:     { flexDirection: 'row', alignItems: 'baseline', marginTop: 4 },
+  streakUnit:    { fontSize: 12 },
+  weekChart:     { flexDirection: 'row', gap: 4, marginTop: 8, alignItems: 'flex-end', height: 64 },
+  weekBar:       { borderRadius: 3 },
+  weekLabels:    { flexDirection: 'row', marginTop: 6 },
+  weekLabel:     { flex: 1, textAlign: 'center', fontSize: 10 },
 });

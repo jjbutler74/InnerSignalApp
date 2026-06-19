@@ -7,26 +7,33 @@ import { today } from '../db/database';
 import { useSettingsStore } from './settingsStore';
 import type { Pack, Affirmation, Slot } from '../types';
 
+type AnchorSlot = 'anchor1' | 'anchor2' | 'anchor3';
+type SlotMap = { anchor1: Affirmation | null; anchor2: Affirmation | null; anchor3: Affirmation | null };
+
 interface AffirmationStore {
   packs: Pack[];
   affirmations: Affirmation[];
-  activeAffirmation: Affirmation | null;
-  activeSlot: 'anchor1' | 'anchor2' | 'anchor3';
+  slotAffirmations: SlotMap;
+  activeAffirmation: Affirmation | null; // derived: slotAffirmations[activeSlot]
+  activeSlot: AnchorSlot;
   activeDate: string;
   loaded: boolean;
 
   load: () => Promise<void>;
-  refreshActiveAffirmation: () => void;
-  selectDailyAffirmation: (slot: Slot) => void;
+  refreshDailyAffirmations: () => void;
+  selectSlotAffirmation: (slot: AnchorSlot) => void;
   toggleFavorite: (id: string) => Promise<void>;
   markSeen: (id: string) => Promise<void>;
   addAffirmation: (text: string, packId: string) => Promise<void>;
   deleteAffirmation: (id: string) => Promise<void>;
 }
 
+const EMPTY_SLOTS: SlotMap = { anchor1: null, anchor2: null, anchor3: null };
+
 export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
   packs: [],
   affirmations: [],
+  slotAffirmations: EMPTY_SLOTS,
   activeAffirmation: null,
   activeSlot: 'anchor1',
   activeDate: '',
@@ -35,27 +42,41 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
   load: async () => {
     const [packs, affirmations] = await Promise.all([getPacks(), getAffirmations()]);
     set({ packs, affirmations, loaded: true });
-    get().refreshActiveAffirmation();
+    get().refreshDailyAffirmations();
   },
 
-  refreshActiveAffirmation: () => {
+  // Called on every TodayScreen focus.
+  // - Updates activeSlot based on current time.
+  // - On a new calendar day, picks all 3 affirmations (locked in for the day).
+  // - Same day: just syncs activeSlot / activeAffirmation, no re-picking.
+  refreshDailyAffirmations: () => {
     const { scheduleAnchor2, scheduleAnchor3 } = useSettingsStore.getState();
     const toMins = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
     const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
-    const slot: 'anchor1' | 'anchor2' | 'anchor3' =
+    const slot: AnchorSlot =
       nowMins < toMins(scheduleAnchor2) ? 'anchor1'
     : nowMins < toMins(scheduleAnchor3) ? 'anchor2'
     : 'anchor3';
+
     const date = today();
-    const { activeSlot, activeDate } = get();
-    // Only re-pick when the calendar date or time-of-day slot has changed.
-    // Navigating back to Today after "I felt it" must not reshuffle the pick.
-    if (slot === activeSlot && date === activeDate) return;
-    set({ activeSlot: slot, activeDate: date });
-    get().selectDailyAffirmation(slot);
+    const { activeDate } = get();
+
+    if (date !== activeDate) {
+      // New day — pick fresh affirmations for all three slots
+      set({ activeDate: date });
+      get().selectSlotAffirmation('anchor1');
+      get().selectSlotAffirmation('anchor2');
+      get().selectSlotAffirmation('anchor3');
+    }
+
+    // Sync activeSlot and derive activeAffirmation
+    set(s => ({
+      activeSlot: slot,
+      activeAffirmation: s.slotAffirmations[slot] ?? null,
+    }));
   },
 
-  selectDailyAffirmation: (slot) => {
+  selectSlotAffirmation: (slot) => {
     const { packs, affirmations } = get();
     const activePacks = new Set(packs.filter(p => p.isActive).map(p => p.id));
     const fromActivePacks = affirmations.filter(a => activePacks.has(a.packId));
@@ -64,22 +85,22 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
     const pool = favoritesOnly && favorites.length > 0 ? favorites : fromActivePacks;
     if (!pool.length) return;
 
-    // Date-seeded pick, biased toward lower seenCount
-    // Sort by seenCount asc, then use date+slot hash to pick consistently per day
+    // Deterministic date+slot hash, biased toward lower seenCount
     const sorted = [...pool].sort((a, b) => a.seenCount - b.seenCount);
     const dateSlotKey = `${today()}-${slot}`;
     let hash = 0;
     for (let i = 0; i < dateSlotKey.length; i++) {
       hash = (hash * 31 + dateSlotKey.charCodeAt(i)) >>> 0;
     }
-    // Weight: bottom 50% of seenCount range gets 80% of picks
     const cutoff = Math.ceil(sorted.length * 0.5);
     const preferLow = (hash % 10) < 8;
     const candidate = preferLow
       ? sorted[hash % cutoff]
       : sorted[cutoff + (hash % (sorted.length - cutoff || 1))];
 
-    set({ activeAffirmation: candidate ?? pool[0] });
+    set(s => ({
+      slotAffirmations: { ...s.slotAffirmations, [slot]: candidate ?? pool[0] },
+    }));
   },
 
   toggleFavorite: async (id) => {
@@ -88,22 +109,23 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
     if (!aff) return;
     await toggleFavorite(id, aff.isFavorite);
     const newFav = !aff.isFavorite;
-    set({
-      affirmations: affirmations.map(a =>
-        a.id === id ? { ...a, isFavorite: newFav } : a,
-      ),
+    set(s => ({
+      affirmations: affirmations.map(a => a.id === id ? { ...a, isFavorite: newFav } : a),
       activeAffirmation: activeAffirmation?.id === id
         ? { ...activeAffirmation, isFavorite: newFav }
         : activeAffirmation,
-    });
+      slotAffirmations: {
+        anchor1: s.slotAffirmations.anchor1?.id === id ? { ...s.slotAffirmations.anchor1, isFavorite: newFav } : s.slotAffirmations.anchor1,
+        anchor2: s.slotAffirmations.anchor2?.id === id ? { ...s.slotAffirmations.anchor2, isFavorite: newFav } : s.slotAffirmations.anchor2,
+        anchor3: s.slotAffirmations.anchor3?.id === id ? { ...s.slotAffirmations.anchor3, isFavorite: newFav } : s.slotAffirmations.anchor3,
+      },
+    }));
   },
 
   markSeen: async (id) => {
     await incrementSeenCount(id);
     set(s => ({
-      affirmations: s.affirmations.map(a =>
-        a.id === id ? { ...a, seenCount: a.seenCount + 1 } : a,
-      ),
+      affirmations: s.affirmations.map(a => a.id === id ? { ...a, seenCount: a.seenCount + 1 } : a),
     }));
   },
 

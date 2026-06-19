@@ -43,10 +43,12 @@ export function AffirmationMomentScreen() {
   const route = useRoute<Route>();
   const { slot } = route.params;
 
-  const activeAffirmation = useAffirmationStore(s => s.activeAffirmation);
-  const toggleFavorite    = useAffirmationStore(s => s.toggleFavorite);
-  const markSeen          = useAffirmationStore(s => s.markSeen);
-  const recordCompletion  = useStatsStore(s => s.recordCompletion);
+  const affirmation        = useAffirmationStore(s => s.slotAffirmations[slot]);
+  const toggleFavorite     = useAffirmationStore(s => s.toggleFavorite);
+  const markSeen           = useAffirmationStore(s => s.markSeen);
+  const recordCompletion   = useStatsStore(s => s.recordCompletion);
+  const completedSlotsToday = useStatsStore(s => s.completedSlotsToday);
+  const alreadyDone        = completedSlotsToday.has(slot);
 
   const slotTime = useSettingsStore(s =>
     slot === 'anchor1' ? s.scheduleAnchor1 :
@@ -89,24 +91,24 @@ export function AffirmationMomentScreen() {
     elapsed < INHALE + HOLD      ? 'Hold'         :
                                    'Breathe out';
 
-  const affText    = activeAffirmation?.text ?? '';
+  const affText    = affirmation?.text ?? '';
   const dashIdx    = affText.indexOf(' — ');
   const italicPart = dashIdx > -1 ? affText.slice(0, dashIdx) : '';
   const restPart   = dashIdx > -1 ? affText.slice(dashIdx) : affText;
 
   const handleFeltIt = async () => {
-    if (!activeAffirmation) return;
+    if (!affirmation || alreadyDone) { nav.navigate('Today'); return; }
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     if (sound !== 'silent') playPreview(sound);
-    await markSeen(activeAffirmation.id);
-    await recordCompletion(activeAffirmation.id, slot);
+    await markSeen(affirmation.id);
+    await recordCompletion(affirmation.id, slot);
     nav.navigate('Today');
   };
 
   const handleSave = () => {
-    if (!activeAffirmation) return;
+    if (!affirmation) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    toggleFavorite(activeAffirmation.id);
+    toggleFavorite(affirmation.id);
   };
 
   return (
@@ -152,15 +154,22 @@ export function AffirmationMomentScreen() {
             style={[s.saveBtn, { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.15)' }]}
             onPress={handleSave}
           >
-            <Heart size={16} color={activeAffirmation?.isFavorite ? AMBER : 'rgba(242,237,226,0.7)'}/>
+            <Heart size={16} color={affirmation?.isFavorite ? AMBER : 'rgba(242,237,226,0.7)'}/>
             <Text style={[s.saveBtnText, { color: 'rgba(242,237,226,0.7)', fontFamily: fonts.sansMedium }]}>
-              {activeAffirmation?.isFavorite ? 'Saved' : 'Save'}
+              {affirmation?.isFavorite ? 'Saved' : 'Save'}
             </Text>
           </Pressable>
-          <Pressable style={[s.feltBtn, { backgroundColor: SAGE }]} onPress={handleFeltIt}>
-            <Check size={16} color="#fff"/>
-            <Text style={[s.feltBtnText, { fontFamily: fonts.sansMedium }]}>I felt it</Text>
-          </Pressable>
+          {alreadyDone ? (
+            <Pressable style={[s.feltBtn, { backgroundColor: SAGE }]} onPress={() => nav.navigate('Today')}>
+              <Close size={16} color="#fff"/>
+              <Text style={[s.feltBtnText, { fontFamily: fonts.sansMedium }]}>Close</Text>
+            </Pressable>
+          ) : (
+            <Pressable style={[s.feltBtn, { backgroundColor: SAGE }]} onPress={handleFeltIt}>
+              <Check size={16} color="#fff"/>
+              <Text style={[s.feltBtnText, { fontFamily: fonts.sansMedium }]}>I felt it</Text>
+            </Pressable>
+          )}
         </View>
       </View>
     </DarkScreen>
