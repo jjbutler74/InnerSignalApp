@@ -8,24 +8,19 @@ interface IconProps {
 }
 
 export function SignalMark({ size = 20 }: IconProps) {
-  // Yin-yang using a single compound path per half
-  // Left half = sage (iron-olive), Right half = terra (ember)
-  // The S-curve is achieved with three arcs per half:
-  //   1. Outer half-circle (large)
-  //   2. Small inner semi-circle bulging outward
-  //   3. Small inner semi-circle curving inward
-
   return (
     <Svg width={size} height={size} viewBox="0 0 20 20" pointerEvents="none">
-      {/* Terra half: right side, with S-curve */}
+      <Circle cx="10" cy="10" r="8" fill={lightTokens.sage} />
+
       <Path
-        d="M10,2 A8,8 0 0,1 10,18 A4,4 0 0,1 10,10 A4,4 0 0,0 10,2 Z"
+        d="
+          M10 2
+          A8 8 0 0 1 10 18
+          A4 4 0 0 1 10 10
+          A4 4 0 0 0 10 2
+          Z
+        "
         fill={lightTokens.terra}
-      />
-      {/* Sage half: left side, with S-curve */}
-      <Path
-        d="M10,2 A8,8 0 0,0 10,18 A4,4 0 0,0 10,10 A4,4 0 0,1 10,2 Z"
-        fill={lightTokens.sage}
       />
     </Svg>
   );

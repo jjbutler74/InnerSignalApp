@@ -141,8 +141,8 @@ export function TodayScreen() {
       {/* Header */}
       <View style={s.header}>
         <View style={s.headerLeft}>
-          <View style={[s.logoBox, { backgroundColor: t.soft }]}>
-            <SignalMark size={16} color="#fff"/>
+          <View style={s.logoBox}>
+            <SignalMark size={20} color="#fff"/>
           </View>
           <Text style={[s.logoText, { color: t.ink, fontFamily: fonts.sansMedium }]}>InnerSignal</Text>
         </View>
@@ -305,7 +305,7 @@ export function TodayScreen() {
 const s = StyleSheet.create({
   header:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 22, paddingVertical: 14 },
   headerLeft:    { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoBox:       { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  logoBox:       { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
   logoText:      { fontSize: 15 },
   greeting:      { paddingHorizontal: 22, paddingBottom: 8 },
   subtext:       { fontSize: 14, marginTop: 8 },

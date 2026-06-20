@@ -26,8 +26,8 @@ export function OnboardingWelcomeScreen() {
         {/* Top bar */}
         <View style={s.topBar}>
           <View style={s.logoRow}>
-            <View style={[s.logoBox, { backgroundColor: lightTokens.soft }]}>
-              <SignalMark size={14} color="#fff"/>
+            <View style={s.logoBox}>
+              <SignalMark size={18} color="#fff"/>
             </View>
             <Text style={[s.logoText, { color: CREAM, fontFamily: fonts.sansMedium }]}>InnerSignal</Text>
           </View>
@@ -72,7 +72,7 @@ const s = StyleSheet.create({
   root:          { flex: 1, paddingHorizontal: 26, paddingVertical: 20 },
   topBar:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   logoRow:       { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoBox:       { width: 24, height: 24, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
+  logoBox:       { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
   logoText:      { fontSize: 14 },
   dots:          { flexDirection: 'row', gap: 4 },
   dot:           { height: 3, width: 8, borderRadius: 2 },

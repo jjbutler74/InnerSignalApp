@@ -67,7 +67,7 @@ export function LockScreen() {
 
         <View style={s.card}>
           <View style={s.cardHeader}>
-            <View style={s.appIcon}><SignalMark size={11} color="#fff"/></View>
+            <View style={s.appIcon}><SignalMark size={14} color="#fff"/></View>
             <Text style={[s.appName, { fontFamily: fonts.sansMedium }]}>InnerSignal</Text>
             <Text style={[s.cardTime, { fontFamily: fonts.sans }]}>now</Text>
           </View>
@@ -104,7 +104,7 @@ const s = StyleSheet.create({
   clockDate:       { fontSize: 14, color: withAlpha(CREAM, 0.7), marginTop: 6 },
   card:            { backgroundColor: withAlpha(lightTokens.surface, 0.96), borderRadius: 22, padding: 16 },
   cardHeader:      { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  appIcon:         { width: 18, height: 18, borderRadius: 5, backgroundColor: lightTokens.soft, alignItems: 'center', justifyContent: 'center' },
+  appIcon:         { width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },
   appName:         { fontSize: 12, color: lightTokens.cardLabel, flex: 1 },
   cardTime:        { fontSize: 11, color: lightTokens.cardSub },
   affText:         { fontSize: 22, lineHeight: 27, color: INK, letterSpacing: -0.2 },
