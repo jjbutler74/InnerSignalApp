@@ -224,17 +224,14 @@ export function TodayScreen() {
               ? (gratitudeDone ? 'done' : statusOf(item.time) === 'done' ? 'next' : statusOf(item.time))
               : anchorStatus(item.slot);
             // Anchor rows are always tappable (including crossed-off, to re-read).
-            // Gratitude row: tappable until done.
-            const canTap = item.slot === 'gratitude'
-              ? (status !== 'done')
-              : true;
+            // Gratitude row: always tappable too — once done, it opens the
+            // composer directly so today's entry can still be edited until midnight.
             return (
               <Pressable
                 key={item.time}
-                onPress={canTap ? () => item.slot === 'gratitude'
-                  ? nav.navigate('EveningNotif')
-                  : nav.navigate('AffirmationMoment', { slot: item.slot })
-                  : undefined}
+                onPress={() => item.slot === 'gratitude'
+                  ? nav.navigate(status === 'done' ? 'GratitudeComposer' : 'EveningNotif')
+                  : nav.navigate('AffirmationMoment', { slot: item.slot })}
                 style={[s.scheduleRow, i > 0 && { borderTopWidth: 1, borderTopColor: t.hairline }]}
               >
                 <View style={[s.scheduleIcon, {

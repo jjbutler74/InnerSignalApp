@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -26,8 +26,13 @@ export function GratitudeComposerScreen() {
   const setItem     = useJournalStore(s => s.setDraftItem);
   const setMood     = useJournalStore(s => s.setDraftMood);
   const saveDraft   = useJournalStore(s => s.saveDraft);
+  const hydrateDraftFromToday = useJournalStore(s => s.hydrateDraftFromToday);
   const loadStats   = useStatsStore(s => s.load);
   const slotCount   = useSettingsStore(s => s.gratitudeCount);
+
+  useEffect(() => {
+    hydrateDraftFromToday();
+  }, []);
 
   const input1 = useRef<TextInput>(null);
   const input2 = useRef<TextInput>(null);

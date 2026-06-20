@@ -18,6 +18,7 @@ interface JournalStore {
   setDraftMood: (mood: Mood) => void;
   saveDraft: () => Promise<JournalEntry | null>;
   clearDraft: () => void;
+  hydrateDraftFromToday: () => void;
 }
 
 const emptyDraft = (): Draft => ({ items: ['', '', ''], mood: null });
@@ -61,4 +62,14 @@ export const useJournalStore = create<JournalStore>((set, get) => ({
   },
 
   clearDraft: () => set({ draft: emptyDraft() }),
+
+  // Lets the composer reopen today's already-saved entry for editing,
+  // up until the date rolls over (saveDraft always writes to today()).
+  hydrateDraftFromToday: () => {
+    const existing = get().entries.find(e => e.date === today());
+    if (!existing) return;
+    const items: Draft['items'] = ['', '', ''];
+    existing.items.forEach((text, i) => { if (i < 3) items[i] = text; });
+    set({ draft: { items, mood: existing.mood } });
+  },
 }));
