@@ -24,6 +24,7 @@ import {
   GeistMono_500Medium,
 } from '@expo-google-fonts/geist-mono';
 import * as Notifications from 'expo-notifications';
+import * as SplashScreen from 'expo-splash-screen';
 
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { navigationRef } from './src/navigation/ref';
@@ -54,6 +55,9 @@ Notifications.setNotificationHandler({
     shouldShowList: true,
   }),
 });
+
+// Keep the native splash visible until fonts + stores are ready below.
+SplashScreen.preventAutoHideAsync();
 
 export type RootStackParamList = {
   OnboardingWelcome: undefined;
@@ -136,6 +140,7 @@ export default function App() {
       await scheduleAllNotifications(settings);
       setInitialRoute(settings.onboardingComplete ? 'Today' : 'OnboardingWelcome');
       setStoresReady(true);
+      await SplashScreen.hideAsync();
     })();
   }, [fontsLoaded]);
 
