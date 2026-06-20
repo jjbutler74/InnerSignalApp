@@ -141,7 +141,7 @@ export function TodayScreen() {
       {/* Header */}
       <View style={s.header}>
         <View style={s.headerLeft}>
-          <View style={[s.logoBox, { backgroundColor: t.sage }]}>
+          <View style={[s.logoBox, { backgroundColor: t.soft }]}>
             <SignalMark size={16} color="#fff"/>
           </View>
           <Text style={[s.logoText, { color: t.ink, fontFamily: fonts.sansMedium }]}>InnerSignal</Text>

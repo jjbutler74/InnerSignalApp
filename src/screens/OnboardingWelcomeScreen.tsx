@@ -6,27 +6,27 @@ import { DarkScreen } from '../components/Screen';
 import { SignalMark, ChevR } from '../components/Icons';
 import { Eyebrow, Display, DisplayItalic } from '../components/Typography';
 import { useTheme } from '../theme/ThemeContext';
+import { darkTokens, lightTokens, withAlpha } from '../theme/tokens';
 import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'OnboardingWelcome'>;
 
-const CREAM     = '#ECEAE5';
-const SAGE_SOFT = '#D4D6D8';
-const TERRA     = '#CC6B49';
-const SAGE      = '#7A876B';
-const INK       = '#1E1E1E';
+const CREAM     = darkTokens.ink;
+const SAGE_SOFT = '#D4D6D8'; // intentionally a neutral gray here, not tokens.sageSoft
+const TERRA     = lightTokens.terra;
+const INK       = lightTokens.ink;
 
 export function OnboardingWelcomeScreen() {
   const { fonts } = useTheme();
   const nav = useNavigation<Nav>();
 
   return (
-    <DarkScreen bg="#252528">
+    <DarkScreen bg={lightTokens.night}>
       <View style={s.root}>
         {/* Top bar */}
         <View style={s.topBar}>
           <View style={s.logoRow}>
-            <View style={[s.logoBox, { backgroundColor: SAGE }]}>
+            <View style={[s.logoBox, { backgroundColor: lightTokens.soft }]}>
               <SignalMark size={14} color="#fff"/>
             </View>
             <Text style={[s.logoText, { color: CREAM, fontFamily: fonts.sansMedium }]}>InnerSignal</Text>
@@ -48,7 +48,7 @@ export function OnboardingWelcomeScreen() {
             <DisplayItalic style={{ fontSize: 44, color: TERRA }}>night</DisplayItalic>
             {'.'}
           </Display>
-          <Text style={[s.body, { color: 'rgba(242,237,226,0.72)', fontFamily: fonts.sans }]}>
+          <Text style={[s.body, { color: withAlpha(CREAM, 0.72), fontFamily: fonts.sans }]}>
             Affirmations land a few times a day to steady you. One evening prompt asks what was good. That's it — nothing to chase, no feed to scroll.
           </Text>
         </View>

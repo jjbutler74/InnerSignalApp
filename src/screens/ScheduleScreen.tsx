@@ -23,11 +23,10 @@ function fromDate(d: Date): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-const ANCHOR_COLORS = ['#7A876B', '#CC6B49', '#A8956B'] as const;
-
 export function ScheduleScreen() {
   const { t, fonts } = useTheme();
   const nav = useNavigation<Nav>();
+  const ANCHOR_COLORS = [t.sage, t.terra, t.amber];
 
   const anchor1        = useSettingsStore(s => s.scheduleAnchor1);
   const anchor2        = useSettingsStore(s => s.scheduleAnchor2);

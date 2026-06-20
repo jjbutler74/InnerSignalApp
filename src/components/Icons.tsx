@@ -1,24 +1,32 @@
 import React from 'react';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { lightTokens } from '../theme/tokens';
 
 interface IconProps {
   size?: number;
   color: string;
 }
 
-// Three concentric 110° arcs pointing upward + origin dot — the InnerSignal brand mark
-export function SignalMark({ size = 20, color }: IconProps) {
-  const cx = 10, cy = 15;
-  const path = [3, 6, 9].map(r => {
-    const x1 = (cx - 0.819 * r).toFixed(2);
-    const x2 = (cx + 0.819 * r).toFixed(2);
-    const y  = (cy - 0.574 * r).toFixed(2);
-    return `M ${x1},${y} A ${r},${r} 0 0,0 ${x2},${y}`;
-  }).join(' ');
+export function SignalMark({ size = 20 }: IconProps) {
+  // Yin-yang using a single compound path per half
+  // Left half = sage (iron-olive), Right half = terra (ember)
+  // The S-curve is achieved with three arcs per half:
+  //   1. Outer half-circle (large)
+  //   2. Small inner semi-circle bulging outward
+  //   3. Small inner semi-circle curving inward
+
   return (
-    <Svg width={size} height={size} viewBox="0 0 20 20" fill="none" pointerEvents="none">
-      <Path d={path} stroke={color} strokeWidth={1.5} strokeLinecap="round"/>
-      <Circle cx={cx} cy={cy} r={1} fill={color}/>
+    <Svg width={size} height={size} viewBox="0 0 20 20" pointerEvents="none">
+      {/* Terra half: right side, with S-curve */}
+      <Path
+        d="M10,2 A8,8 0 0,1 10,18 A4,4 0 0,1 10,10 A4,4 0 0,0 10,2 Z"
+        fill={lightTokens.terra}
+      />
+      {/* Sage half: left side, with S-curve */}
+      <Path
+        d="M10,2 A8,8 0 0,0 10,18 A4,4 0 0,0 10,10 A4,4 0 0,1 10,2 Z"
+        fill={lightTokens.sage}
+      />
     </Svg>
   );
 }

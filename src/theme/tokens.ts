@@ -22,6 +22,10 @@ export const lightTokens = {
   amberSoft: '#E2D9C4',
   night:     '#252528',  // Charcoal
 
+  // Light-card-on-dark-screen text (Lock/EveningNotif mini app-card header)
+  cardLabel: '#4A3F36',
+  cardSub:   '#8A7B6E',
+
   // Border radii
   rXs: 6,
   rSm: 10,
@@ -47,6 +51,15 @@ export const darkTokens = {
 export type Tokens = {
   [K in keyof typeof lightTokens]: typeof lightTokens[K] extends number ? number : string;
 };
+
+// Applies an alpha channel to a token hex color, e.g. withAlpha(darkTokens.ink, 0.5)
+export function withAlpha(hex: string, alpha: number): string {
+  const v = hex.replace('#', '');
+  const r = parseInt(v.substring(0, 2), 16);
+  const g = parseInt(v.substring(2, 4), 16);
+  const b = parseInt(v.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 export const fonts = {
   display: 'InstrumentSerif_400Regular',

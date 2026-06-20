@@ -8,6 +8,7 @@ import { DarkScreen } from '../components/Screen';
 import { Close, Heart, Check } from '../components/Icons';
 import { Eyebrow } from '../components/Typography';
 import { useTheme } from '../theme/ThemeContext';
+import { darkTokens, lightTokens, withAlpha } from '../theme/tokens';
 import { useAffirmationStore } from '../store/affirmationStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { playPreview } from '../utils/sound';
@@ -28,10 +29,10 @@ const HOLD   = 4;
 const EXHALE = 6;
 const CYCLE  = INHALE + HOLD + EXHALE;
 
-const CREAM = '#ECEAE5';
-const AMBER = '#A8956B';
-const SAGE  = '#7A876B';
-const DIM   = 'rgba(236,234,229,0.5)';
+const CREAM = darkTokens.ink;
+const AMBER = lightTokens.amber;
+const SAGE  = lightTokens.sage;
+const DIM   = withAlpha(CREAM, 0.5);
 
 function formatTime(secs: number): string {
   return `0:${String(secs).padStart(2, '0')}`;
@@ -163,8 +164,8 @@ export function AffirmationMomentScreen() {
               style={[s.saveBtn, { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.15)' }]}
               onPress={handleSave}
             >
-              <Heart size={16} color={affirmation.isFavorite ? AMBER : 'rgba(242,237,226,0.7)'}/>
-              <Text style={[s.saveBtnText, { color: 'rgba(242,237,226,0.7)', fontFamily: fonts.sansMedium }]}>
+              <Heart size={16} color={affirmation.isFavorite ? AMBER : withAlpha(CREAM, 0.7)}/>
+              <Text style={[s.saveBtnText, { color: withAlpha(CREAM, 0.7), fontFamily: fonts.sansMedium }]}>
                 {affirmation.isFavorite ? 'Saved' : 'Save'}
               </Text>
             </Pressable>

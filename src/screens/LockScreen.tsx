@@ -7,6 +7,7 @@ import { DarkScreen } from '../components/Screen';
 import { SignalMark } from '../components/Icons';
 import { Eyebrow } from '../components/Typography';
 import { useTheme } from '../theme/ThemeContext';
+import { darkTokens, lightTokens, withAlpha } from '../theme/tokens';
 import { useAffirmationStore } from '../store/affirmationStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { snoozeAffirmationNotification } from '../notifications/scheduler';
@@ -55,7 +56,7 @@ export function LockScreen() {
   const restPart   = dashIdx > -1 ? affText.slice(dashIdx) : '';
 
   return (
-    <DarkScreen bg="#141414">
+    <DarkScreen>
       <View style={s.root}>
         <View style={s.clockBlock}>
           <Text style={[s.clockTime, { fontFamily: fonts.sans }]}>{time}</Text>
@@ -70,14 +71,14 @@ export function LockScreen() {
             <Text style={[s.appName, { fontFamily: fonts.sansMedium }]}>InnerSignal</Text>
             <Text style={[s.cardTime, { fontFamily: fonts.sans }]}>now</Text>
           </View>
-          <Eyebrow style={{ color: '#8A7B6E', marginBottom: 6 }}>{SLOT_LABEL[slot]}</Eyebrow>
+          <Eyebrow style={{ color: lightTokens.cardSub, marginBottom: 6 }}>{SLOT_LABEL[slot]}</Eyebrow>
           <Text style={[s.affText, { fontFamily: fonts.display }]}>
             <Text style={{ fontStyle: 'italic' }}>{italicPart}</Text>
             {restPart}
           </Text>
           <View style={s.actions}>
             <Pressable style={s.primaryBtn} onPress={() => nav.navigate('AffirmationMoment', { slot })}>
-              <Text style={[s.primaryBtnText, { fontFamily: fonts.sansMedium }]}>Read & breathe</Text>
+              <Text style={[s.primaryBtnText, { fontFamily: fonts.sansMedium }]}>Read & absorb</Text>
             </Pressable>
             <Pressable style={s.secondaryBtn} onPress={handleSnooze} disabled={snoozed}>
               <Text style={[s.secondaryBtnText, { fontFamily: fonts.sansMedium }]}>
@@ -93,23 +94,23 @@ export function LockScreen() {
   );
 }
 
-const CREAM = '#ECEAE5';
-const INK   = '#1E1E1E';
+const CREAM = darkTokens.ink;
+const INK   = lightTokens.ink;
 
 const s = StyleSheet.create({
   root:            { flex: 1, paddingHorizontal: 22 },
   clockBlock:      { alignItems: 'center', marginTop: 18 },
   clockTime:       { fontSize: 64, lineHeight: 68, letterSpacing: -2.5, color: CREAM, fontWeight: '300' },
-  clockDate:       { fontSize: 14, color: 'rgba(242,237,226,0.7)', marginTop: 6 },
-  card:            { backgroundColor: 'rgba(250,246,238,0.96)', borderRadius: 22, padding: 16 },
+  clockDate:       { fontSize: 14, color: withAlpha(CREAM, 0.7), marginTop: 6 },
+  card:            { backgroundColor: withAlpha(lightTokens.surface, 0.96), borderRadius: 22, padding: 16 },
   cardHeader:      { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  appIcon:         { width: 18, height: 18, borderRadius: 5, backgroundColor: '#7A876B', alignItems: 'center', justifyContent: 'center' },
-  appName:         { fontSize: 12, color: '#4A3F36', flex: 1 },
-  cardTime:        { fontSize: 11, color: '#8A7B6E' },
+  appIcon:         { width: 18, height: 18, borderRadius: 5, backgroundColor: lightTokens.soft, alignItems: 'center', justifyContent: 'center' },
+  appName:         { fontSize: 12, color: lightTokens.cardLabel, flex: 1 },
+  cardTime:        { fontSize: 11, color: lightTokens.cardSub },
   affText:         { fontSize: 22, lineHeight: 27, color: INK, letterSpacing: -0.2 },
   actions:         { flexDirection: 'row', gap: 8, marginTop: 12 },
   primaryBtn:      { flex: 1, backgroundColor: INK, borderRadius: 999, paddingVertical: 10, alignItems: 'center' },
   primaryBtnText:  { fontSize: 13, color: CREAM },
-  secondaryBtn:    { backgroundColor: '#EFEDE8', borderRadius: 999, paddingVertical: 10, paddingHorizontal: 14 },
+  secondaryBtn:    { backgroundColor: lightTokens.surface2, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 14 },
   secondaryBtnText:{ fontSize: 13, color: INK },
 });

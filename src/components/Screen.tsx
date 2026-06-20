@@ -2,6 +2,7 @@ import React from 'react';
 import { StatusBar, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
+import { darkTokens } from '../theme/tokens';
 
 interface ScreenProps {
   children: React.ReactNode;
@@ -25,7 +26,7 @@ export function Screen({ children, bg, style }: ScreenProps) {
   );
 }
 
-export function DarkScreen({ children, bg = '#1A2326', style }: ScreenProps) {
+export function DarkScreen({ children, bg = darkTokens.bg, style }: ScreenProps) {
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.root, { backgroundColor: bg, paddingTop: insets.top, paddingBottom: insets.bottom }, style]}>
