@@ -1,4 +1,4 @@
-import { getDb, uid, today } from './database';
+import { getDb, uid, today, localDateString, parseLocalDate } from './database';
 import type { Pack, Affirmation, JournalEntry, UserSettings, Completion, Slot } from '../types';
 
 // ─── Settings ────────────────────────────────────────────────────────────────
@@ -244,7 +244,7 @@ export async function getCompletionDates(limitDays = 30): Promise<string[]> {
   cutoff.setDate(cutoff.getDate() - limitDays);
   const rows = await db.getAllAsync<{ date: string }>(
     'SELECT DISTINCT date FROM completions WHERE date >= ? ORDER BY date DESC',
-    [cutoff.toISOString().slice(0, 10)],
+    [localDateString(cutoff)],
   );
   return rows.map(r => r.date);
 }
@@ -255,7 +255,7 @@ export async function getJournalDates(limitDays = 30): Promise<string[]> {
   cutoff.setDate(cutoff.getDate() - limitDays);
   const rows = await db.getAllAsync<{ date: string }>(
     'SELECT date FROM journal_entries WHERE date >= ? ORDER BY date DESC',
-    [cutoff.toISOString().slice(0, 10)],
+    [localDateString(cutoff)],
   );
   return rows.map(r => r.date);
 }
@@ -282,9 +282,9 @@ export async function getWeeklyMoodValues(): Promise<(number | null)[]> {
   for (const r of rows) byDate[r.date] = moodScale[r.mood] ?? 0.5;
 
   return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
+    const d = parseLocalDate(monday);
     d.setDate(d.getDate() + i);
-    const key = d.toISOString().slice(0, 10);
+    const key = localDateString(d);
     return byDate[key] ?? null;
   });
 }
@@ -294,5 +294,5 @@ function getMondayOfCurrentWeek(): string {
   const day = d.getDay(); // 0 = Sunday
   const diff = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
-  return d.toISOString().slice(0, 10);
+  return localDateString(d);
 }

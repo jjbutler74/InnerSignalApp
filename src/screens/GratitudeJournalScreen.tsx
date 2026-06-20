@@ -7,6 +7,7 @@ import { Display, DisplayItalic, Eyebrow } from '../components/Typography';
 import { ChevL } from '../components/Icons';
 import { useTheme } from '../theme/ThemeContext';
 import { useJournalStore } from '../store/journalStore';
+import { today, localDateString } from '../db/database';
 import type { JournalEntry } from '../types';
 import type { RootStackParamList } from '../../App';
 
@@ -14,12 +15,12 @@ type Nav = NativeStackNavigationProp<RootStackParamList, 'GratitudeJournal'>;
 
 function calendarDays(): { date: string; day: number; dow: string }[] {
   const result = [];
-  const today = new Date();
+  const now = new Date();
   for (let i = 10; i >= 0; i--) {
-    const d = new Date(today);
+    const d = new Date(now);
     d.setDate(d.getDate() - i);
     result.push({
-      date: d.toISOString().slice(0, 10),
+      date: localDateString(d),
       day:  d.getDate(),
       dow:  ['S','M','T','W','T','F','S'][d.getDay()],
     });
@@ -29,10 +30,9 @@ function calendarDays(): { date: string; day: number; dow: string }[] {
 
 function formatEntryDate(dateStr: string): string {
   const d = new Date(dateStr + 'T12:00:00');
-  const today = new Date();
-  const yesterday = new Date(); yesterday.setDate(today.getDate() - 1);
-  if (dateStr === today.toISOString().slice(0, 10))     return `Tonight · ${d.toLocaleDateString('en-US', { weekday: 'short' })}`;
-  if (dateStr === yesterday.toISOString().slice(0, 10)) return `Last night · ${d.toLocaleDateString('en-US', { weekday: 'short' })}`;
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+  if (dateStr === today())                      return `Tonight · ${d.toLocaleDateString('en-US', { weekday: 'short' })}`;
+  if (dateStr === localDateString(yesterday))   return `Last night · ${d.toLocaleDateString('en-US', { weekday: 'short' })}`;
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
@@ -40,7 +40,7 @@ export function GratitudeJournalScreen() {
   const { t, fonts } = useTheme();
   const nav = useNavigation<Nav>();
   const entries = useJournalStore(s => s.entries);
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = today();
 
   const cal = calendarDays();
   const entryDates = new Set(entries.map(e => e.date));

@@ -12,6 +12,7 @@ import { useSettingsStore } from '../store/settingsStore';
 import { useAffirmationStore } from '../store/affirmationStore';
 import { useJournalStore } from '../store/journalStore';
 import { useStatsStore } from '../store/statsStore';
+import { today } from '../db/database';
 import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Today'>;
@@ -75,8 +76,7 @@ export function TodayScreen() {
     refreshIfNewDay();
   }, []));
 
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const gratitudeDone = useJournalStore(s => s.entries.some(e => e.date === todayStr));
+  const gratitudeDone = useJournalStore(s => s.entries.some(e => e.date === today()));
 
   const displayName = name || 'there';
   const nextAnchor  = nextAnchorLabel(scheduleAnchor1, scheduleAnchor2, scheduleAnchor3);

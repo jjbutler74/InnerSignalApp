@@ -70,6 +70,25 @@ export function uid(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+// Local calendar date as YYYY-MM-DD. toISOString() is UTC-based, which rolls
+// over to the next day many hours after local midnight in timezones ahead of
+// UTC (e.g. NZT) — using it here made "new day" resets fire near local noon
+// instead of midnight.
+export function localDateString(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export function today(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localDateString(new Date());
+}
+
+// new Date("YYYY-MM-DD") parses as UTC midnight, which lands on the previous
+// local calendar day in negative-UTC-offset timezones. Parse the components
+// directly so the result is local midnight on the intended date instead.
+export function parseLocalDate(dateStr: string): Date {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
 }

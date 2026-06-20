@@ -5,7 +5,7 @@ import {
   getTodayCompletedSlots,
   recordCompletion,
 } from '../db/queries';
-import { today } from '../db/database';
+import { today, localDateString, parseLocalDate } from '../db/database';
 import type { Slot } from '../types';
 
 interface StatsStore {
@@ -83,7 +83,7 @@ function computeStreak(activeDates: Set<string>): number {
   const d = new Date();
   // Allow today to count even if not yet completed (don't break streak mid-day)
   for (let i = 0; i < 60; i++) {
-    const key = d.toISOString().slice(0, 10);
+    const key = localDateString(d);
     if (activeDates.has(key)) {
       streak++;
     } else if (i > 0) {
@@ -97,9 +97,9 @@ function computeStreak(activeDates: Set<string>): number {
 function computeWeeklyCompletions(activeDates: Set<string>): boolean[] {
   const monday = getMondayOfCurrentWeek();
   return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
+    const d = parseLocalDate(monday);
     d.setDate(d.getDate() + i);
-    return activeDates.has(d.toISOString().slice(0, 10));
+    return activeDates.has(localDateString(d));
   });
 }
 
@@ -108,5 +108,5 @@ function getMondayOfCurrentWeek(): string {
   const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
-  return d.toISOString().slice(0, 10);
+  return localDateString(d);
 }
