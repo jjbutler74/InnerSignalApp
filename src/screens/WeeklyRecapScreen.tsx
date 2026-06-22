@@ -93,7 +93,13 @@ export function WeeklyRecapScreen() {
               <View style={[s.statIcon, {
                 backgroundColor: tone === 'night' ? t.night : tone === 'terra' ? t.terraSoft : t.sageSoft,
               }]}>
-                <Icon size={14} color={tone === 'night' ? '#fff' : tone === 'terra' ? t.terra : t.sage}/>
+                {tone === 'night' ? (
+                  <View style={{ transform: [{ rotate: '180deg' }], marginTop: -4, marginLeft: 4 }}>
+                    <Icon size={14} color="#fff"/>
+                  </View>
+                ) : (
+                  <Icon size={14} color={tone === 'terra' ? t.terra : t.sage}/>
+                )}
               </View>
               <Text style={[s.statN, { fontFamily: fonts.display, color: t.ink }]}>{n}</Text>
               <Text style={[s.statLabel, { fontFamily: fonts.mono, color: t.muted }]}>{label.toUpperCase()}</Text>
