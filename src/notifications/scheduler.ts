@@ -64,8 +64,6 @@ function isInQuietHours(
 
 // anchor2 + anchor3 are skipped on weekends when weekendMode is on
 const WEEKEND_REDUCED = new Set(['anchor2', 'anchor3']);
-// Mon–Fri in Expo's 1-indexed weekday system (1=Sun … 7=Sat)
-const WEEKDAYS = [2, 3, 4, 5, 6] as const;
 
 export async function scheduleAllNotifications(settings: UserSettings): Promise<void> {
   const { status } = await Notifications.getPermissionsAsync();
@@ -112,26 +110,23 @@ export async function scheduleAllNotifications(settings: UserSettings): Promise<
       continue;
     }
 
-    if (settings.weekendMode && WEEKEND_REDUCED.has(cfg.slot)) {
-      for (const weekday of WEEKDAYS) {
-        await Notifications.scheduleNotificationAsync({
-          content,
-          trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
-            weekday,
-            hour,
-            minute,
-            channelId: cfg.channelId,
-          },
-        });
-      }
-    } else {
+    // Per-day DATE triggers (not DAILY/WEEKLY) so a time that's already
+    // passed today is simply skipped instead of firing immediately as a
+    // same-day catch-up. Covers the next 7 days; re-runs on each app
+    // launch to stay current.
+    const skipWeekends = settings.weekendMode && WEEKEND_REDUCED.has(cfg.slot);
+    for (let d = 0; d < 7; d++) {
+      const date = new Date();
+      date.setDate(date.getDate() + d);
+      date.setHours(hour, minute, 0, 0);
+      if (date <= now) continue;
+      const dow = date.getDay(); // 0 = Sun, 6 = Sat
+      if (skipWeekends && (dow === 0 || dow === 6)) continue;
       await Notifications.scheduleNotificationAsync({
         content,
         trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DAILY,
-          hour,
-          minute,
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date,
           channelId: cfg.channelId,
         },
       });
