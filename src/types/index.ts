@@ -72,7 +72,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   quietHoursEnd: null,
   weekendMode: false,
   sound: 'bell',
-  theme: 'auto',
+  theme: 'dark',
   favoritesOnly: false,
   onboardingComplete: false,
 };

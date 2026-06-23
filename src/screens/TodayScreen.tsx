@@ -97,15 +97,18 @@ export function TodayScreen() {
   ] as const;
 
   // Anchor rows: 'done' only if the user actually read it (not just time-based).
-  // 'next' = current active time window. 'pending' = future or past-unread.
+  // 'next' = current active time window. 'pending' = before its window opens
+  // (not yet tappable). 'missed' = window closed (next anchor is active) and
+  // it was never read — auto-crossed-off, but not counted toward stats.
   const anchorStatus = (slot: 'anchor1' | 'anchor2' | 'anchor3') => {
     if (completedSlotsToday.has(slot)) return 'done';
     const start = toMins(slot === 'anchor1' ? scheduleAnchor1 : slot === 'anchor2' ? scheduleAnchor2 : scheduleAnchor3);
     const end   = slot === 'anchor1' ? toMins(scheduleAnchor2)
                 : slot === 'anchor2' ? toMins(scheduleAnchor3)
                 : Infinity;
-    if (nowMins >= start && nowMins < end) return 'next';
-    return 'pending';
+    if (nowMins < start) return 'pending';
+    if (nowMins < end) return 'next';
+    return 'missed';
   };
 
   const statusOf = (time: string) => {
@@ -223,20 +226,25 @@ export function TodayScreen() {
             const status = item.slot === 'gratitude'
               ? (gratitudeDone ? 'done' : statusOf(item.time) === 'done' ? 'next' : statusOf(item.time))
               : anchorStatus(item.slot);
-            // Anchor rows are always tappable (including crossed-off, to re-read).
+            // Anchor rows: locked (no-op tap) before their window opens.
+            // Once active, missed, or done, tapping opens the moment screen
+            // (done/missed open in review-only mode, no re-counting).
             // Gratitude row: always tappable too — once done, it opens the
             // composer directly so today's entry can still be edited until midnight.
+            const crossedOff = status === 'done' || status === 'missed';
+            const isPending  = item.slot !== 'gratitude' && status === 'pending';
             return (
               <Pressable
                 key={item.time}
+                disabled={isPending}
                 onPress={() => item.slot === 'gratitude'
                   ? nav.navigate(status === 'done' ? 'GratitudeComposer' : 'EveningNotif')
-                  : nav.navigate('AffirmationMoment', { slot: item.slot })}
+                  : nav.navigate('AffirmationMoment', { slot: item.slot, reviewOnly: status === 'missed' })}
                 style={[s.scheduleRow, i > 0 && { borderTopWidth: 1, borderTopColor: t.hairline }]}
               >
                 <View style={[s.scheduleIcon, {
                   backgroundColor: item.tone === 'night' ? t.night : toneSoft(item.tone),
-                  opacity: status === 'done' ? 0.5 : 1,
+                  opacity: crossedOff ? 0.5 : 1,
                 }]}>
                   {item.tone === 'sage'  && <Sun  size={16} color={toneColor(item.tone)}/>}
                   {item.tone === 'terra' && <Bolt size={16} color={toneColor(item.tone)}/>}
@@ -245,8 +253,8 @@ export function TodayScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[s.scheduleTitle, {
-                    color: status === 'done' ? t.muted : t.ink,
-                    textDecorationLine: status === 'done' ? 'line-through' : 'none',
+                    color: crossedOff ? t.muted : t.ink,
+                    textDecorationLine: crossedOff ? 'line-through' : 'none',
                     fontFamily: fonts.sansMedium,
                   }]}>{item.title}</Text>
                   <Text style={[s.scheduleSub, { color: t.muted, fontFamily: fonts.sans }]}>{item.sub}</Text>

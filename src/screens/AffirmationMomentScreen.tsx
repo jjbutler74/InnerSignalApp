@@ -42,14 +42,14 @@ export function AffirmationMomentScreen() {
   const { fonts } = useTheme();
   const nav   = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const { slot } = route.params;
+  const { slot, reviewOnly } = route.params;
 
   const affirmation        = useAffirmationStore(s => s.slotAffirmations[slot]);
   const toggleFavorite     = useAffirmationStore(s => s.toggleFavorite);
   const markSeen           = useAffirmationStore(s => s.markSeen);
   const recordCompletion   = useStatsStore(s => s.recordCompletion);
   const completedSlotsToday = useStatsStore(s => s.completedSlotsToday);
-  const alreadyDone        = completedSlotsToday.has(slot);
+  const alreadyDone        = completedSlotsToday.has(slot) || !!reviewOnly;
 
   const slotTime = useSettingsStore(s =>
     slot === 'anchor1' ? s.scheduleAnchor1 :

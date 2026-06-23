@@ -65,7 +65,7 @@ export type RootStackParamList = {
   OnboardingSchedule: undefined;
   Lock: { slot?: 'anchor1' | 'anchor2' | 'anchor3' };
   Today: undefined;
-  AffirmationMoment: { slot: 'anchor1' | 'anchor2' | 'anchor3' };
+  AffirmationMoment: { slot: 'anchor1' | 'anchor2' | 'anchor3'; reviewOnly?: boolean };
   AffirmationLibrary: undefined;
   AddAffirmation: undefined;
   Settings: undefined;
