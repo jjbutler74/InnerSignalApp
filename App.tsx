@@ -30,6 +30,7 @@ import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { navigationRef } from './src/navigation/ref';
 import { setupChannels } from './src/notifications/channels';
 import { scheduleAllNotifications } from './src/notifications/scheduler';
+import { isAnchorMissed } from './src/utils/anchorWindow';
 
 import { TodayScreen } from './src/screens/TodayScreen';
 import { OnboardingWelcomeScreen } from './src/screens/OnboardingWelcomeScreen';
@@ -151,7 +152,14 @@ export default function App() {
       if (slot === 'gratitude') {
         navigationRef.navigate('EveningNotif');
       } else if (slot === 'anchor1' || slot === 'anchor2' || slot === 'anchor3') {
-        navigationRef.navigate('AffirmationMoment', { slot });
+        // A real notification tapped late (after the next anchor's window
+        // opened) should open in the same review-only mode as an
+        // auto-crossed-off row — no late credit toward the streak.
+        const { completedSlotsToday } = useStatsStore.getState();
+        const schedule = useSettingsStore.getState();
+        const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
+        const reviewOnly = !completedSlotsToday.has(slot) && isAnchorMissed(slot, schedule, nowMins);
+        navigationRef.navigate('AffirmationMoment', { slot, reviewOnly });
       }
     });
     return () => responseListenerRef.current?.remove();

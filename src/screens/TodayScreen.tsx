@@ -13,6 +13,7 @@ import { useAffirmationStore } from '../store/affirmationStore';
 import { useJournalStore } from '../store/journalStore';
 import { useStatsStore } from '../store/statsStore';
 import { today } from '../db/database';
+import { anchorWindow } from '../utils/anchorWindow';
 import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Today'>;
@@ -102,10 +103,7 @@ export function TodayScreen() {
   // it was never read — auto-crossed-off, but not counted toward stats.
   const anchorStatus = (slot: 'anchor1' | 'anchor2' | 'anchor3') => {
     if (completedSlotsToday.has(slot)) return 'done';
-    const start = toMins(slot === 'anchor1' ? scheduleAnchor1 : slot === 'anchor2' ? scheduleAnchor2 : scheduleAnchor3);
-    const end   = slot === 'anchor1' ? toMins(scheduleAnchor2)
-                : slot === 'anchor2' ? toMins(scheduleAnchor3)
-                : Infinity;
+    const { start, end } = anchorWindow(slot, { scheduleAnchor1, scheduleAnchor2, scheduleAnchor3 });
     if (nowMins < start) return 'pending';
     if (nowMins < end) return 'next';
     return 'missed';
