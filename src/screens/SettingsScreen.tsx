@@ -4,6 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { setupChannels } from '../notifications/channels';
 import { scheduleAllNotifications } from '../notifications/scheduler';
 import { playPreview } from '../utils/sound';
+import { openExactAlarmSettings } from '../utils/exactAlarm';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '../components/Screen';
@@ -167,6 +168,11 @@ export function SettingsScreen() {
             label="Affirmation packs"
             value={`${activePacks} active`}
             onPress={() => nav.navigate('AffirmationLibrary')}
+          />
+          <PressableRow
+            label="On-time reminders"
+            value="Allow exact alarms"
+            onPress={openExactAlarmSettings}
           />
           <View style={[s.toggleRow, { borderTopWidth: 1, borderTopColor: t.hairline }]}>
             <Text style={[s.toggleLabel, { color: t.ink, fontFamily: fonts.sansMedium }]}>Favorites only</Text>
