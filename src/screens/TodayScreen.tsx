@@ -109,11 +109,12 @@ export function TodayScreen() {
     return 'missed';
   };
 
-  const statusOf = (time: string) => {
-    const m = toMins(time);
-    if (m < nowMins - 30) return 'done';
-    if (m <= nowMins + 60) return 'next';
-    return 'pending';
+  // Gratitude: 'done' once completed today. Otherwise 'pending' until its
+  // scheduled time, then 'next' for the rest of the day (no auto-miss —
+  // it stays open right up to the midnight reset).
+  const gratitudeStatus = () => {
+    if (gratitudeDone) return 'done';
+    return nowMins < toMins(scheduleGratitude) ? 'pending' : 'next';
   };
 
   const toneColor = (tone: string) => {
@@ -221,16 +222,14 @@ export function TodayScreen() {
         {/* Day schedule */}
         <Card padding={0} style={{ marginBottom: 12 }}>
           {schedule.map((item, i) => {
-            const status = item.slot === 'gratitude'
-              ? (gratitudeDone ? 'done' : statusOf(item.time) === 'done' ? 'next' : statusOf(item.time))
-              : anchorStatus(item.slot);
-            // Anchor rows: locked (no-op tap) before their window opens.
+            const status = item.slot === 'gratitude' ? gratitudeStatus() : anchorStatus(item.slot);
+            // All rows: locked (no-op tap) before their window opens.
             // Once active, missed, or done, tapping opens the moment screen
             // (done/missed open in review-only mode, no re-counting).
-            // Gratitude row: always tappable too — once done, it opens the
-            // composer directly so today's entry can still be edited until midnight.
+            // Gratitude row once done still opens — into the composer
+            // directly — so today's entry can be edited until midnight.
             const crossedOff = status === 'done' || status === 'missed';
-            const isPending  = item.slot !== 'gratitude' && status === 'pending';
+            const isPending  = status === 'pending';
             return (
               <Pressable
                 key={item.time}
