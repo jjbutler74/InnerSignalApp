@@ -31,6 +31,7 @@ import { navigationRef } from './src/navigation/ref';
 import { setupChannels } from './src/notifications/channels';
 import { scheduleAllNotifications } from './src/notifications/scheduler';
 import { isAnchorMissed } from './src/utils/anchorWindow';
+import { today } from './src/db/database';
 
 import { TodayScreen } from './src/screens/TodayScreen';
 import { OnboardingWelcomeScreen } from './src/screens/OnboardingWelcomeScreen';
@@ -46,6 +47,20 @@ import { EveningNotifScreen } from './src/screens/EveningNotifScreen';
 import { GratitudeComposerScreen } from './src/screens/GratitudeComposerScreen';
 import { GratitudeJournalScreen } from './src/screens/GratitudeJournalScreen';
 import { WeeklyRecapScreen } from './src/screens/WeeklyRecapScreen';
+
+function navigateForNotification(response: Notifications.NotificationResponse): void {
+  const slot = response.notification.request.content.data?.slot as string | undefined;
+  if (slot === 'gratitude') {
+    const done = useJournalStore.getState().entries.some(e => e.date === today());
+    navigationRef.navigate(done ? 'GratitudeComposer' : 'EveningNotif');
+  } else if (slot === 'anchor1' || slot === 'anchor2' || slot === 'anchor3') {
+    const { completedSlotsToday } = useStatsStore.getState();
+    const schedule = useSettingsStore.getState();
+    const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
+    const reviewOnly = !completedSlotsToday.has(slot) && isAnchorMissed(slot, schedule, nowMins);
+    navigationRef.navigate('AffirmationMoment', { slot, reviewOnly });
+  }
+}
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -130,6 +145,8 @@ export default function App() {
   const [storesReady, setStoresReady] = useState(false);
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList>('Today');
   const responseListenerRef = useRef<Notifications.EventSubscription | null>(null);
+  const lastNotificationResponse = Notifications.useLastNotificationResponse();
+  const handledResponseIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!fontsLoaded) return;
@@ -145,22 +162,30 @@ export default function App() {
     })();
   }, [fontsLoaded]);
 
+  // Cold-start: app was launched by tapping a notification (nav not yet ready).
+  useEffect(() => {
+    if (!storesReady || !lastNotificationResponse) return;
+    const id = lastNotificationResponse.notification.request.identifier;
+    if (handledResponseIdRef.current === id) return;
+    handledResponseIdRef.current = id;
+    const tryNav = () => {
+      if (navigationRef.isReady()) {
+        navigateForNotification(lastNotificationResponse);
+      } else {
+        setTimeout(tryNav, 50);
+      }
+    };
+    tryNav();
+  }, [storesReady, lastNotificationResponse]);
+
+  // Foreground / background→active: notification tapped while app was running.
   useEffect(() => {
     responseListenerRef.current = Notifications.addNotificationResponseReceivedListener(response => {
-      const slot = response.notification.request.content.data?.slot as string | undefined;
       if (!navigationRef.isReady()) return;
-      if (slot === 'gratitude') {
-        navigationRef.navigate('EveningNotif');
-      } else if (slot === 'anchor1' || slot === 'anchor2' || slot === 'anchor3') {
-        // A real notification tapped late (after the next anchor's window
-        // opened) should open in the same review-only mode as an
-        // auto-crossed-off row — no late credit toward the streak.
-        const { completedSlotsToday } = useStatsStore.getState();
-        const schedule = useSettingsStore.getState();
-        const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
-        const reviewOnly = !completedSlotsToday.has(slot) && isAnchorMissed(slot, schedule, nowMins);
-        navigationRef.navigate('AffirmationMoment', { slot, reviewOnly });
-      }
+      const id = response.notification.request.identifier;
+      if (handledResponseIdRef.current === id) return;
+      handledResponseIdRef.current = id;
+      navigateForNotification(response);
     });
     return () => responseListenerRef.current?.remove();
   }, []);
