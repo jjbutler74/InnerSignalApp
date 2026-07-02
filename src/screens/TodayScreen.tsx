@@ -266,39 +266,41 @@ export function TodayScreen() {
           })}
         </Card>
 
-        {/* Stats row */}
-        <View style={s.statsRow}>
-          <Card style={{ flex: 1, marginRight: 10 }}>
-            <Eyebrow>Streak</Eyebrow>
-            <View style={s.streakRow}>
-              <Flame size={20} color={t.terra}/>
-              <Display style={{ fontSize: 28 }}> {streakDays}</Display>
-              <Text style={[s.streakUnit, { color: t.muted, fontFamily: fonts.sans }]}> days</Text>
-            </View>
-          </Card>
-          <Card style={{ flex: 1.4 }}>
-            <Eyebrow>This week</Eyebrow>
-            <View style={s.weekChart}>
-              {weekBars.map((v, i) => (
-                <View key={i} style={[s.weekBar, {
-                  flex: 1,
-                  height: Math.max(v * 60, 4),
-                  backgroundColor: i === todayDow ? t.terra : v ? t.sage : t.divider,
-                  opacity: i > todayDow ? 0.35 : 1,
-                }]}/>
-              ))}
-            </View>
-            <View style={s.weekLabels}>
-              {weekDays.map((d, i) => (
-                <Text key={i} style={[s.weekLabel, {
-                  color: i === todayDow ? t.terra : t.muted,
-                  fontFamily: fonts.mono,
-                  fontWeight: i === todayDow ? '600' : '400',
-                }]}>{d}</Text>
-              ))}
-            </View>
-          </Card>
-        </View>
+        {/* Stats row — tapping either card opens the weekly recap */}
+        <Pressable onPress={() => nav.navigate('WeeklyRecap')}>
+          <View style={s.statsRow}>
+            <Card style={{ flex: 1, marginRight: 10 }}>
+              <Eyebrow>Streak</Eyebrow>
+              <View style={s.streakRow}>
+                <Flame size={20} color={t.terra}/>
+                <Display style={{ fontSize: 28 }}> {streakDays}</Display>
+                <Text style={[s.streakUnit, { color: t.muted, fontFamily: fonts.sans }]}> days</Text>
+              </View>
+            </Card>
+            <Card style={{ flex: 1.4 }}>
+              <Eyebrow>This week</Eyebrow>
+              <View style={s.weekChart}>
+                {weekBars.map((v, i) => (
+                  <View key={i} style={[s.weekBar, {
+                    flex: 1,
+                    height: Math.max(v * 60, 4),
+                    backgroundColor: i === todayDow ? t.terra : v ? t.sage : t.divider,
+                    opacity: i > todayDow ? 0.35 : 1,
+                  }]}/>
+                ))}
+              </View>
+              <View style={s.weekLabels}>
+                {weekDays.map((d, i) => (
+                  <Text key={i} style={[s.weekLabel, {
+                    color: i === todayDow ? t.terra : t.muted,
+                    fontFamily: fonts.mono,
+                    fontWeight: i === todayDow ? '600' : '400',
+                  }]}>{d}</Text>
+                ))}
+              </View>
+            </Card>
+          </View>
+        </Pressable>
       </ScrollView>
     </Screen>
   );
