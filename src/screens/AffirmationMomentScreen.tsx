@@ -164,7 +164,7 @@ export function AffirmationMomentScreen() {
               style={[s.saveBtn, { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.15)' }]}
               onPress={handleSave}
             >
-              <Heart size={16} color={affirmation.isFavorite ? AMBER : withAlpha(CREAM, 0.7)}/>
+              <Heart size={16} color={affirmation.isFavorite ? AMBER : withAlpha(CREAM, 0.7)} filled={affirmation.isFavorite}/>
               <Text style={[s.saveBtnText, { color: withAlpha(CREAM, 0.7), fontFamily: fonts.sansMedium }]}>
                 {affirmation.isFavorite ? 'Saved' : 'Save'}
               </Text>

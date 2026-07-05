@@ -206,7 +206,7 @@ export function TodayScreen() {
                   style={[s.actionBtn, { backgroundColor: isFav ? t.terra : t.ink }]}
                   onPress={() => toggleFavorite(cardAffirmation.id)}
                 >
-                  <Heart size={14} color={t.bg}/>
+                  <Heart size={14} color={t.bg} filled={isFav}/>
                   <Text style={[s.actionBtnText, { color: t.bg, fontFamily: fonts.sansMedium }]}>
                     {isFav ? 'Saved' : 'Save to favorites'}
                   </Text>
