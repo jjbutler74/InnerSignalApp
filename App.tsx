@@ -49,6 +49,10 @@ import { GratitudeJournalScreen } from './src/screens/GratitudeJournalScreen';
 import { WeeklyRecapScreen } from './src/screens/WeeklyRecapScreen';
 
 function navigateForNotification(response: Notifications.NotificationResponse): void {
+  // Refresh daily picks before reading slotAffirmations — the app may have
+  // been backgrounded overnight, leaving the store with yesterday's picks.
+  useAffirmationStore.getState().refreshDailyAffirmations();
+
   const slot = response.notification.request.content.data?.slot as string | undefined;
   if (slot === 'gratitude') {
     const done = useJournalStore.getState().entries.some(e => e.date === today());
