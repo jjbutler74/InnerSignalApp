@@ -18,7 +18,9 @@ function clockTime(): string {
   return new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 }
 function clockLabel(): string {
-  return new Date().toLocaleDateString('en-US', { weekday: 'long' }) + ' evening';
+  const h = new Date().getHours();
+  const period = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+  return new Date().toLocaleDateString('en-US', { weekday: 'long' }) + ` ${period}`;
 }
 
 export function EveningNotifScreen() {
