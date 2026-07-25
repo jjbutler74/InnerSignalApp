@@ -147,7 +147,7 @@ export function AffirmationMomentScreen() {
                 </View>
               </View>
               <Text style={[s.breathHint, { color: DIM, fontFamily: fonts.display }]}>
-                {breathPhase} · {INHALE}s in · {HOLD}s hold · {EXHALE}s out
+                {breathPhase}
               </Text>
             </>
           ) : (
