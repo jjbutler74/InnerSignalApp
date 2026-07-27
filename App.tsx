@@ -31,7 +31,7 @@ import { navigationRef } from './src/navigation/ref';
 import { setupChannels } from './src/notifications/channels';
 import { scheduleAllNotifications } from './src/notifications/scheduler';
 import { isAnchorMissed } from './src/utils/anchorWindow';
-import { today } from './src/db/database';
+import { today, localDateString } from './src/db/database';
 
 import { TodayScreen } from './src/screens/TodayScreen';
 import { OnboardingWelcomeScreen } from './src/screens/OnboardingWelcomeScreen';
@@ -53,6 +53,13 @@ function navigateForNotification(response: Notifications.NotificationResponse): 
   // been backgrounded overnight, leaving the store with yesterday's picks.
   useAffirmationStore.getState().refreshDailyAffirmations();
 
+  // Notification.date is seconds since Unix epoch. A notification delivered
+  // on a previous calendar day is stale — tapping it must never award
+  // completion credit for today's slot (e.g. yesterday's evening notif
+  // still in the bar should not complete today's evening slot at 8 AM).
+  const notifDay = localDateString(new Date(response.notification.date * 1000));
+  const isStale  = notifDay !== today();
+
   const slot = response.notification.request.content.data?.slot as string | undefined;
   if (slot === 'gratitude') {
     const done = useJournalStore.getState().entries.some(e => e.date === today());
@@ -61,7 +68,7 @@ function navigateForNotification(response: Notifications.NotificationResponse): 
     const { completedSlotsToday } = useStatsStore.getState();
     const schedule = useSettingsStore.getState();
     const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
-    const reviewOnly = !completedSlotsToday.has(slot) && isAnchorMissed(slot, schedule, nowMins);
+    const reviewOnly = isStale || (!completedSlotsToday.has(slot) && isAnchorMissed(slot, schedule, nowMins));
     navigationRef.navigate('AffirmationMoment', { slot, reviewOnly });
   }
 }
