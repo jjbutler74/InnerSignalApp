@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { Screen } from '../components/Screen';
 import { Close, Check } from '../components/Icons';
@@ -14,24 +15,32 @@ import { scheduleAllNotifications } from '../notifications/scheduler';
 import { MOOD_COLORS, type Mood } from '../types';
 import type { RootStackParamList } from '../../App';
 
-type Nav = NativeStackNavigationProp<RootStackParamList, 'GratitudeComposer'>;
+type Nav   = NativeStackNavigationProp<RootStackParamList, 'GratitudeComposer'>;
+type Route = RouteProp<RootStackParamList, 'GratitudeComposer'>;
 
 const MOODS: Mood[] = ['Heavy', 'Mixed', 'Steady', 'Clear', 'Resolved'];
 
 export function GratitudeComposerScreen() {
   const { t, fonts } = useTheme();
-  const nav = useNavigation<Nav>();
+  const nav   = useNavigation<Nav>();
+  const route = useRoute<Route>();
+  const targetDate = route.params?.targetDate;
 
   const draft       = useJournalStore(s => s.draft);
   const setItem     = useJournalStore(s => s.setDraftItem);
   const setMood     = useJournalStore(s => s.setDraftMood);
   const saveDraft   = useJournalStore(s => s.saveDraft);
   const hydrateDraftFromToday = useJournalStore(s => s.hydrateDraftFromToday);
+  const hydrateDraftFromDate  = useJournalStore(s => s.hydrateDraftFromDate);
   const loadStats   = useStatsStore(s => s.load);
   const slotCount   = useSettingsStore(s => s.gratitudeCount);
 
   useEffect(() => {
-    hydrateDraftFromToday();
+    if (targetDate) {
+      hydrateDraftFromDate(targetDate);
+    } else {
+      hydrateDraftFromToday();
+    }
   }, []);
 
   const input1 = useRef<TextInput>(null);
@@ -44,7 +53,7 @@ export function GratitudeComposerScreen() {
 
   const handleSave = async () => {
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    const entry = await saveDraft();
+    const entry = await saveDraft(targetDate);
     if (entry) {
       await loadStats();
       scheduleAllNotifications(useSettingsStore.getState());
@@ -68,7 +77,7 @@ export function GratitudeComposerScreen() {
             <Pressable onPress={() => nav.goBack()}>
               <Close size={22} color={t.muted}/>
             </Pressable>
-            <Eyebrow style={{ color: t.night }}>Tonight · {filledCount} of {slotCount}</Eyebrow>
+            <Eyebrow style={{ color: t.night }}>{targetDate ? 'Last night' : 'Tonight'} · {filledCount} of {slotCount}</Eyebrow>
             <Pressable onPress={() => nav.goBack()}>
               <Text style={[s.skipText, { color: t.muted, fontFamily: fonts.sansMedium }]}>Skip</Text>
             </Pressable>

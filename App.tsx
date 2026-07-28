@@ -62,8 +62,14 @@ function navigateForNotification(response: Notifications.NotificationResponse): 
 
   const slot = response.notification.request.content.data?.slot as string | undefined;
   if (slot === 'gratitude') {
-    const done = useJournalStore.getState().entries.some(e => e.date === today());
-    navigationRef.navigate(done ? 'GratitudeComposer' : 'EveningNotif');
+    if (isStale) {
+      // Stale notification (from yesterday) — go straight to the composer
+      // for that date so the entry lands on the correct day, not today.
+      navigationRef.navigate('GratitudeComposer', { targetDate: notifDay });
+    } else {
+      const done = useJournalStore.getState().entries.some(e => e.date === today());
+      navigationRef.navigate(done ? 'GratitudeComposer' : 'EveningNotif');
+    }
   } else if (slot === 'anchor1' || slot === 'anchor2' || slot === 'anchor3') {
     const { completedSlotsToday } = useStatsStore.getState();
     const schedule = useSettingsStore.getState();
@@ -98,7 +104,7 @@ export type RootStackParamList = {
   Settings: undefined;
   Schedule: undefined;
   EveningNotif: undefined;
-  GratitudeComposer: undefined;
+  GratitudeComposer: { targetDate?: string } | undefined;
   GratitudeJournal: undefined;
   WeeklyRecap: undefined;
 };
