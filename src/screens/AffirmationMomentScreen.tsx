@@ -99,11 +99,14 @@ export function AffirmationMomentScreen() {
 
   const handleFeltIt = async () => {
     if (!affirmation || alreadyDone) { nav.navigate('Today'); return; }
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    if (sound !== 'silent') playPreview(sound);
-    await markSeen(affirmation.id);
-    await recordCompletion(affirmation.id, slot);
-    nav.navigate('Today');
+    try {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (sound !== 'silent') playPreview(sound);
+      await markSeen(affirmation.id);
+      await recordCompletion(affirmation.id, slot);
+    } finally {
+      nav.navigate('Today');
+    }
   };
 
   const handleSave = () => {
@@ -120,7 +123,9 @@ export function AffirmationMomentScreen() {
           <Pressable onPress={() => nav.goBack()}>
             <Close size={22} color={DIM}/>
           </Pressable>
-          <Eyebrow style={{ color: DIM }}>{SLOT_LABEL[slot]} · {slotTime}</Eyebrow>
+          <Eyebrow style={{ color: DIM }}>
+            {SLOT_LABEL[slot]} · {reviewOnly ? 'Review only' : completedSlotsToday.has(slot) ? 'Done' : slotTime}
+          </Eyebrow>
           <View style={{ width: 22 }}/>
         </View>
 

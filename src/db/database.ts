@@ -12,6 +12,7 @@ export async function getDb(): Promise<SQLite.SQLiteDatabase> {
 async function migrate(db: SQLite.SQLiteDatabase) {
   await db.execAsync(`PRAGMA journal_mode = WAL;`);
 
+  // v0: baseline schema (idempotent — safe to re-run every launch)
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS packs (
       id         TEXT PRIMARY KEY,
@@ -54,6 +55,22 @@ async function migrate(db: SQLite.SQLiteDatabase) {
     CREATE INDEX IF NOT EXISTS idx_completions_date ON completions(date);
     CREATE INDEX IF NOT EXISTS idx_affirmations_pack ON affirmations(pack_id);
   `);
+
+  // Versioned migrations (run once, tracked via PRAGMA user_version)
+  const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
+  const version = row?.user_version ?? 0;
+
+  if (version < 1) {
+    // Deduplicate any existing (date, slot) pairs, then enforce uniqueness.
+    // Keeps the earliest rowid so no completion history is lost.
+    await db.execAsync(`
+      DELETE FROM completions WHERE rowid NOT IN (
+        SELECT MIN(rowid) FROM completions GROUP BY date, slot
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_completions_date_slot ON completions(date, slot);
+      PRAGMA user_version = 1;
+    `);
+  }
 }
 
 export async function resetDatabase(): Promise<void> {

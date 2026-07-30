@@ -224,7 +224,7 @@ export async function upsertJournalEntry(
 export async function recordCompletion(affirmationId: string, slot: Slot): Promise<void> {
   const db = await getDb();
   await db.runAsync(
-    'INSERT INTO completions (id, date, affirmation_id, slot) VALUES (?, ?, ?, ?)',
+    'INSERT OR IGNORE INTO completions (id, date, affirmation_id, slot) VALUES (?, ?, ?, ?)',
     [uid(), today(), affirmationId, slot],
   );
 }

@@ -53,28 +53,24 @@ function navigateForNotification(response: Notifications.NotificationResponse): 
   // been backgrounded overnight, leaving the store with yesterday's picks.
   useAffirmationStore.getState().refreshDailyAffirmations();
 
-  // Notification.date is seconds since Unix epoch. A notification delivered
-  // on a previous calendar day is stale — tapping it must never award
-  // completion credit for today's slot (e.g. yesterday's evening notif
-  // still in the bar should not complete today's evening slot at 8 AM).
+  // Stale notification (delivered on a previous calendar day). The app
+  // dismisses these from the tray on every launch, but a cold-start tap
+  // can still arrive here before that cleanup runs. Just land on Today.
   const notifDay = localDateString(new Date(response.notification.date * 1000));
-  const isStale  = notifDay !== today();
+  if (notifDay !== today()) {
+    navigationRef.navigate('Today');
+    return;
+  }
 
   const slot = response.notification.request.content.data?.slot as string | undefined;
   if (slot === 'gratitude') {
-    if (isStale) {
-      // Stale notification (from yesterday) — go straight to the composer
-      // for that date so the entry lands on the correct day, not today.
-      navigationRef.navigate('GratitudeComposer', { targetDate: notifDay });
-    } else {
-      const done = useJournalStore.getState().entries.some(e => e.date === today());
-      navigationRef.navigate(done ? 'GratitudeComposer' : 'EveningNotif');
-    }
+    const done = useJournalStore.getState().entries.some(e => e.date === today());
+    navigationRef.navigate(done ? 'GratitudeComposer' : 'EveningNotif');
   } else if (slot === 'anchor1' || slot === 'anchor2' || slot === 'anchor3') {
     const { completedSlotsToday } = useStatsStore.getState();
     const schedule = useSettingsStore.getState();
     const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
-    const reviewOnly = isStale || (!completedSlotsToday.has(slot) && isAnchorMissed(slot, schedule, nowMins));
+    const reviewOnly = !completedSlotsToday.has(slot) && isAnchorMissed(slot, schedule, nowMins);
     navigationRef.navigate('AffirmationMoment', { slot, reviewOnly });
   }
 }
@@ -104,7 +100,7 @@ export type RootStackParamList = {
   Settings: undefined;
   Schedule: undefined;
   EveningNotif: undefined;
-  GratitudeComposer: { targetDate?: string } | undefined;
+  GratitudeComposer: undefined;
   GratitudeJournal: undefined;
   WeeklyRecap: undefined;
 };
@@ -173,6 +169,16 @@ export default function App() {
       await setupChannels(settings.sound);
       await Promise.all([loadAffirmations(), loadJournal(), loadStats()]);
       await scheduleAllNotifications(settings);
+
+      // Dismiss any delivered notifications from previous calendar days so
+      // stale entries never linger in the tray into the next day.
+      const presented = await Notifications.getPresentedNotificationsAsync();
+      await Promise.all(
+        presented
+          .filter(n => localDateString(new Date(n.date * 1000)) !== today())
+          .map(n => Notifications.dismissNotificationAsync(n.request.identifier))
+      );
+
       setInitialRoute(settings.onboardingComplete ? 'Today' : 'OnboardingWelcome');
       setStoresReady(true);
       await SplashScreen.hideAsync();
