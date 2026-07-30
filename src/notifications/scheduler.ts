@@ -134,7 +134,10 @@ export async function scheduleAllNotifications(settings: UserSettings): Promise<
   }
 }
 
-export async function snoozeAffirmationNotification(settings: UserSettings): Promise<void> {
+export async function snoozeAffirmationNotification(
+  settings: UserSettings,
+  slot: 'anchor1' | 'anchor2' | 'anchor3' = 'anchor1',
+): Promise<void> {
   const { status } = await Notifications.getPermissionsAsync();
   if (status !== 'granted') return;
 
@@ -142,7 +145,7 @@ export async function snoozeAffirmationNotification(settings: UserSettings): Pro
     content: {
       title: 'Ready when you are',
       body: 'Affirmation is still waiting.',
-      data: { slot: 'anchor1' },
+      data: { slot },
       sound: settings.sound === 'silent' ? false : settings.sound,
     },
     trigger: {

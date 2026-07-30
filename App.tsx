@@ -172,12 +172,16 @@ export default function App() {
 
       // Dismiss any delivered notifications from previous calendar days so
       // stale entries never linger in the tray into the next day.
-      const presented = await Notifications.getPresentedNotificationsAsync();
-      await Promise.all(
-        presented
-          .filter(n => localDateString(new Date(n.date * 1000)) !== today())
-          .map(n => Notifications.dismissNotificationAsync(n.request.identifier))
-      );
+      // Wrapped in try/catch — a permission-revoked error here must not
+      // prevent setStoresReady from running and leaving the app at splash.
+      try {
+        const presented = await Notifications.getPresentedNotificationsAsync();
+        await Promise.all(
+          presented
+            .filter(n => localDateString(new Date(n.date * 1000)) !== today())
+            .map(n => Notifications.dismissNotificationAsync(n.request.identifier))
+        );
+      } catch { /* best-effort cleanup — non-fatal */ }
 
       setInitialRoute(settings.onboardingComplete ? 'Today' : 'OnboardingWelcome');
       setStoresReady(true);
