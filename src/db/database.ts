@@ -71,6 +71,16 @@ async function migrate(db: SQLite.SQLiteDatabase) {
       PRAGMA user_version = 1;
     `);
   }
+
+  if (version < 2) {
+    // Add content-category column to packs so Iron vs Sage packs can be
+    // toggled independently. All existing built-in packs are Iron-style,
+    // so DEFAULT 'iron' is the correct backfill.
+    await db.execAsync(`
+      ALTER TABLE packs ADD COLUMN category TEXT NOT NULL DEFAULT 'iron';
+      PRAGMA user_version = 2;
+    `);
+  }
 }
 
 export async function resetDatabase(): Promise<void> {

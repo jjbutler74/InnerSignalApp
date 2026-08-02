@@ -1,22 +1,32 @@
 import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import type { AudioPlayer } from 'expo-audio';
 
 const SOURCES = {
   bell:  require('../../assets/sounds/bell.wav'),
   chime: require('../../assets/sounds/chime.wav'),
 } as const;
 
-let _player: ReturnType<typeof createAudioPlayer> | null = null;
+// Called once at app startup — keeps audio session configured so playPreview
+// has no async setup work on the hot path.
+export async function initAudio(): Promise<void> {
+  try {
+    await setAudioModeAsync({
+      playsInSilentMode: false,
+      shouldRouteThroughEarpiece: false,
+    });
+  } catch (e) {
+    console.warn('[sound] initAudio failed:', e);
+  }
+}
 
-export async function playPreview(sound: 'bell' | 'chime'): Promise<void> {
+let _player: AudioPlayer | null = null;
+
+export function playPreview(sound: 'bell' | 'chime'): void {
   try {
     if (_player) {
       _player.remove();
       _player = null;
     }
-    await setAudioModeAsync({
-      playsInSilentMode: false,
-      shouldRouteThroughEarpiece: false,
-    });
     const player = createAudioPlayer(SOURCES[sound]);
     _player = player;
     const sub = player.addListener('playbackStatusUpdate', status => {

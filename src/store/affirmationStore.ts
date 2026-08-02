@@ -2,10 +2,11 @@ import { create } from 'zustand';
 import {
   getPacks, getAffirmations,
   insertAffirmation, toggleFavorite, incrementSeenCount, deleteAffirmation,
+  setPackActiveByCategory, deletePacksByCategory, saveSettings,
 } from '../db/queries';
 import { today } from '../db/database';
 import { useSettingsStore } from './settingsStore';
-import type { Pack, Affirmation, Slot } from '../types';
+import type { Pack, Affirmation, Slot, TonePreference } from '../types';
 
 type AnchorSlot = 'anchor1' | 'anchor2' | 'anchor3';
 type SlotMap = { anchor1: Affirmation | null; anchor2: Affirmation | null; anchor3: Affirmation | null };
@@ -20,6 +21,7 @@ interface AffirmationStore {
   loaded: boolean;
 
   load: () => Promise<void>;
+  setActiveTone: (tone: TonePreference) => Promise<void>;
   refreshDailyAffirmations: () => void;
   selectSlotAffirmation: (slot: AnchorSlot) => void;
   validateSlotAffirmations: () => void;
@@ -44,6 +46,20 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
     const [packs, affirmations] = await Promise.all([getPacks(), getAffirmations()]);
     set({ packs, affirmations, loaded: true });
     get().refreshDailyAffirmations();
+  },
+
+  setActiveTone: async (tone) => {
+    await saveSettings({ tonePreference: tone });
+    if (tone === 'iron') await deletePacksByCategory('sage');
+    if (tone === 'sage') await deletePacksByCategory('iron');
+    await setPackActiveByCategory(tone);
+    // Reset activeDate so the next refreshDailyAffirmations takes the
+    // new-day branch and picks fresh from the tone-filtered pool, rather
+    // than the validate branch which only repicks slots that became invalid.
+    // This prevents TodayScreen's focus effect from showing a different
+    // affirmation than the one that was set here.
+    set({ activeDate: '' });
+    await get().load();
   },
 
   // Called on every TodayScreen focus.

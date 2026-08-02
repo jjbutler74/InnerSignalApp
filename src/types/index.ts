@@ -10,7 +10,10 @@ export interface Pack {
   tone: Tone;
   isBuiltIn: boolean;
   isActive: boolean;
+  category: 'iron' | 'sage';
 }
+
+export type TonePreference = 'iron' | 'sage' | 'balance';
 
 export interface Affirmation {
   id: string;
@@ -44,6 +47,7 @@ export interface UserSettings {
   theme: Theme;
   favoritesOnly: boolean;
   onboardingComplete: boolean;
+  tonePreference: TonePreference;
 }
 
 export interface Completion {
@@ -75,4 +79,5 @@ export const DEFAULT_SETTINGS: UserSettings = {
   theme: 'dark',
   favoritesOnly: false,
   onboardingComplete: false,
+  tonePreference: 'balance',
 };

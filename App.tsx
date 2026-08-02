@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, ActivityIndicator } from 'react-native';
-import { seedIfEmpty } from './src/db/seed';
+import { View, ActivityIndicator, AppState } from 'react-native';
+import { seedIfEmpty, seedSagePacks } from './src/db/seed';
 import { useSettingsStore } from './src/store/settingsStore';
 import { useAffirmationStore } from './src/store/affirmationStore';
 import { useJournalStore } from './src/store/journalStore';
@@ -29,7 +29,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { navigationRef } from './src/navigation/ref';
 import { setupChannels } from './src/notifications/channels';
-import { scheduleAllNotifications } from './src/notifications/scheduler';
+import { scheduleAllNotifications, cleanupNotifications } from './src/notifications/scheduler';
+import { initAudio } from './src/utils/sound';
 import { isAnchorMissed } from './src/utils/anchorWindow';
 import { today, localDateString } from './src/db/database';
 
@@ -47,6 +48,7 @@ import { EveningNotifScreen } from './src/screens/EveningNotifScreen';
 import { GratitudeComposerScreen } from './src/screens/GratitudeComposerScreen';
 import { GratitudeJournalScreen } from './src/screens/GratitudeJournalScreen';
 import { WeeklyRecapScreen } from './src/screens/WeeklyRecapScreen';
+import { OnboardingToneScreen } from './src/screens/OnboardingToneScreen';
 
 function navigateForNotification(response: Notifications.NotificationResponse): void {
   // Refresh daily picks before reading slotAffirmations — the app may have
@@ -67,9 +69,21 @@ function navigateForNotification(response: Notifications.NotificationResponse): 
     const done = useJournalStore.getState().entries.some(e => e.date === today());
     navigationRef.navigate(done ? 'GratitudeComposer' : 'EveningNotif');
   } else if (slot === 'anchor1' || slot === 'anchor2' || slot === 'anchor3') {
-    const { completedSlotsToday } = useStatsStore.getState();
+    // Compute the active slot directly from current time — no store dependency.
     const schedule = useSettingsStore.getState();
     const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
+    const toMins = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+    const currentSlot: 'anchor1' | 'anchor2' | 'anchor3' =
+      nowMins < toMins(schedule.scheduleAnchor2) ? 'anchor1'
+    : nowMins < toMins(schedule.scheduleAnchor3) ? 'anchor2'
+    : 'anchor3';
+    // Stale notification — its slot no longer matches the current time window.
+    // Land on Today; the correct affirmation is already shown there.
+    if (slot !== currentSlot) {
+      navigationRef.navigate('Today');
+      return;
+    }
+    const { completedSlotsToday } = useStatsStore.getState();
     const reviewOnly = !completedSlotsToday.has(slot) && isAnchorMissed(slot, schedule, nowMins);
     navigationRef.navigate('AffirmationMoment', { slot, reviewOnly });
   }
@@ -91,6 +105,7 @@ SplashScreen.preventAutoHideAsync();
 export type RootStackParamList = {
   OnboardingWelcome: undefined;
   OnboardingName: undefined;
+  OnboardingTone: undefined;
   OnboardingSchedule: undefined;
   Lock: { slot?: 'anchor1' | 'anchor2' | 'anchor3' };
   Today: undefined;
@@ -121,6 +136,7 @@ function AppNavigator({ initialRoute }: { initialRoute: keyof RootStackParamList
       >
         <Stack.Screen name="OnboardingWelcome" component={OnboardingWelcomeScreen}/>
         <Stack.Screen name="OnboardingName" component={OnboardingNameScreen}/>
+        <Stack.Screen name="OnboardingTone" component={OnboardingToneScreen}/>
         <Stack.Screen name="OnboardingSchedule" component={OnboardingScheduleScreen}/>
         <Stack.Screen name="Lock" component={LockScreen}/>
         <Stack.Screen name="Today" component={TodayScreen}/>
@@ -165,23 +181,13 @@ export default function App() {
     if (!fontsLoaded) return;
     (async () => {
       await seedIfEmpty();
+      await seedSagePacks();
       const settings = await loadSettings().then(() => useSettingsStore.getState());
       await setupChannels(settings.sound);
+      await initAudio();
       await Promise.all([loadAffirmations(), loadJournal(), loadStats()]);
       await scheduleAllNotifications(settings);
-
-      // Dismiss any delivered notifications from previous calendar days so
-      // stale entries never linger in the tray into the next day.
-      // Wrapped in try/catch — a permission-revoked error here must not
-      // prevent setStoresReady from running and leaving the app at splash.
-      try {
-        const presented = await Notifications.getPresentedNotificationsAsync();
-        await Promise.all(
-          presented
-            .filter(n => localDateString(new Date(n.date * 1000)) !== today())
-            .map(n => Notifications.dismissNotificationAsync(n.request.identifier))
-        );
-      } catch { /* best-effort cleanup — non-fatal */ }
+      await cleanupNotifications(settings);
 
       setInitialRoute(settings.onboardingComplete ? 'Today' : 'OnboardingWelcome');
       setStoresReady(true);
@@ -216,6 +222,18 @@ export default function App() {
     });
     return () => responseListenerRef.current?.remove();
   }, []);
+
+  // Every time the app comes to foreground, evict superseded anchor
+  // notifications and any leftovers from a previous calendar day.
+  useEffect(() => {
+    if (!storesReady) return;
+    const sub = AppState.addEventListener('change', nextState => {
+      if (nextState === 'active') {
+        cleanupNotifications(useSettingsStore.getState());
+      }
+    });
+    return () => sub.remove();
+  }, [storesReady]);
 
   if (!fontsLoaded || !storesReady) {
     return (

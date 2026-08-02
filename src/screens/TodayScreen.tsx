@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -61,7 +61,6 @@ export function TodayScreen() {
   const scheduleGratitude = useSettingsStore(s => s.scheduleGratitude);
   const gratitudeCount    = useSettingsStore(s => s.gratitudeCount);
 
-  const activeSlot               = useAffirmationStore(s => s.activeSlot);
   const slotAffirmations         = useAffirmationStore(s => s.slotAffirmations);
   const toggleFavorite           = useAffirmationStore(s => s.toggleFavorite);
   const refreshDailyAffirmations = useAffirmationStore(s => s.refreshDailyAffirmations);
@@ -72,9 +71,12 @@ export function TodayScreen() {
   const completedSlotsToday = useStatsStore(s => s.completedSlotsToday);
   const refreshIfNewDay     = useStatsStore(s => s.refreshIfNewDay);
 
+  const [slotReady, setSlotReady] = useState(false);
+
   useFocusEffect(useCallback(() => {
     refreshDailyAffirmations();
     refreshIfNewDay();
+    setSlotReady(true);
   }, []));
 
   const gratitudeDone = useJournalStore(s => s.entries.some(e => e.date === today()));
@@ -85,9 +87,15 @@ export function TodayScreen() {
   const toMins = (tm: string) => { const [h, m] = tm.split(':').map(Number); return h * 60 + m; };
   const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
 
+  // Hard-locked to current time — never depends on potentially stale store state.
+  const currentSlot: 'anchor1' | 'anchor2' | 'anchor3' =
+    nowMins < toMins(scheduleAnchor2) ? 'anchor1'
+  : nowMins < toMins(scheduleAnchor3) ? 'anchor2'
+  : 'anchor3';
+
   // Main card is time-gated: blank/coming-soon before the morning anchor
   const beforeFirstAnchor = nowMins < toMins(scheduleAnchor1);
-  const cardAffirmation   = slotAffirmations[activeSlot];
+  const cardAffirmation   = slotAffirmations[currentSlot];
   const isFav             = cardAffirmation?.isFavorite ?? false;
 
   const schedule = [
@@ -175,8 +183,18 @@ export function TodayScreen() {
 
       <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
 
-        {/* Today's affirmation card — blank before morning anchor */}
-        {beforeFirstAnchor ? (
+        {/* Today's affirmation card — hold until focus effect has run with saved schedule */}
+        {!slotReady ? (
+          <Card style={{ marginBottom: 12 }}>
+            <Eyebrow style={{ color: t.sage }}>Today's Affirmation</Eyebrow>
+            <Display style={{ fontSize: 22, lineHeight: 28, marginTop: 4, color: t.muted }}>
+              Start with your first affirmation.
+            </Display>
+            <Text style={[s.comingSoonSub, { color: t.soft, fontFamily: fonts.sans }]}>
+              Tap an anchor below when you're ready.
+            </Text>
+          </Card>
+        ) : beforeFirstAnchor ? (
           <Card style={{ marginBottom: 12 }}>
             <Eyebrow style={{ color: t.sage }}>Morning Affirmation</Eyebrow>
             <Display style={{ fontSize: 22, lineHeight: 28, marginTop: 4, color: t.muted }}>
@@ -190,7 +208,7 @@ export function TodayScreen() {
         ) : (
           <Card style={{ marginBottom: 12 }}>
             <View style={s.cardHeader}>
-              <Eyebrow style={{ color: t.sage }}>Today's {SLOT_LABEL[activeSlot]} Affirmation</Eyebrow>
+              <Eyebrow style={{ color: t.sage }}>Today's {SLOT_LABEL[currentSlot]} Affirmation</Eyebrow>
             </View>
             <Display style={{ fontSize: 22, lineHeight: 28, marginTop: 4, ...(cardAffirmation ? {} : { color: t.muted }) }}>
               {cardAffirmation?.text ?? (affirmationsLoaded ? 'No affirmations available.' : 'Loading your affirmation…')}
@@ -211,7 +229,7 @@ export function TodayScreen() {
                     {isFav ? 'Saved' : 'Save to favorites'}
                   </Text>
                 </Pressable>
-                <Pressable onPress={() => nav.navigate('AffirmationMoment', { slot: activeSlot })}>
+                <Pressable onPress={() => nav.navigate('AffirmationMoment', { slot: currentSlot })}>
                   <Text style={[s.ghostBtn, { color: t.muted, fontFamily: fonts.sansMedium }]}>Read & absorb</Text>
                 </Pressable>
               </View>

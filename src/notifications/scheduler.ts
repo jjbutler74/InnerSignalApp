@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import type { UserSettings } from '../types';
 import { isTodayGratitudeDone } from '../db/queries';
+import { today, localDateString } from '../db/database';
 
 type SlotConfig = {
   time: string;
@@ -158,4 +159,40 @@ export async function snoozeAffirmationNotification(
 
 export async function cancelAllNotifications(): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
+}
+
+// Dismisses delivered notifications that are stale or superseded:
+//   - Any notification from a previous calendar day.
+//   - Anchor notifications from an earlier slot when a newer one has fired.
+//     (e.g. if anchor2 has fired, anchor1 is evicted from the tray.)
+// Gratitude notifications are left alone — they stay until the user acts or midnight rolls over.
+// Safe to call on every foreground transition; errors are swallowed.
+export async function cleanupNotifications(settings: UserSettings): Promise<void> {
+  try {
+    const presented = await Notifications.getPresentedNotificationsAsync();
+    if (!presented.length) return;
+
+    const todayStr = today();
+    const toMins = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+    const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
+
+    const currentAnchorSlot =
+      nowMins >= toMins(settings.scheduleAnchor3) ? 'anchor3' :
+      nowMins >= toMins(settings.scheduleAnchor2) ? 'anchor2' :
+      nowMins >= toMins(settings.scheduleAnchor1) ? 'anchor1' :
+      null;
+
+    const toRemove = presented.filter(n => {
+      if (localDateString(new Date(n.date * 1000)) !== todayStr) return true;
+      const slot = n.request.content.data?.slot as string | undefined;
+      if (slot === 'anchor1' || slot === 'anchor2' || slot === 'anchor3') {
+        return slot !== currentAnchorSlot;
+      }
+      return false;
+    });
+
+    await Promise.all(
+      toRemove.map(n => Notifications.dismissNotificationAsync(n.request.identifier)),
+    );
+  } catch { /* best-effort — must not throw */ }
 }

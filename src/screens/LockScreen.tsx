@@ -13,6 +13,14 @@ import { useSettingsStore } from '../store/settingsStore';
 import { snoozeAffirmationNotification } from '../notifications/scheduler';
 import type { RootStackParamList } from '../../App';
 
+function currentAnchorSlot(
+  a2: string, a3: string,
+): 'anchor1' | 'anchor2' | 'anchor3' {
+  const toMins = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+  const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
+  return nowMins < toMins(a2) ? 'anchor1' : nowMins < toMins(a3) ? 'anchor2' : 'anchor3';
+}
+
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Lock'>;
 type Route = RouteProp<RootStackParamList, 'Lock'>;
 
@@ -33,8 +41,13 @@ export function LockScreen() {
   const { fonts } = useTheme();
   const nav   = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const slot  = route.params?.slot ?? 'anchor1';
-  const activeAffirmation = useAffirmationStore(s => s.activeAffirmation);
+  const scheduleAnchor2 = useSettingsStore(s => s.scheduleAnchor2);
+  const scheduleAnchor3 = useSettingsStore(s => s.scheduleAnchor3);
+  // Use route param when launched from a specific notification, otherwise
+  // derive from current time so LockScreen always shows the right slot.
+  const slot = route.params?.slot ?? currentAnchorSlot(scheduleAnchor2, scheduleAnchor3);
+  const slotAffirmations = useAffirmationStore(s => s.slotAffirmations);
+  const activeAffirmation = slotAffirmations[slot];
 
   const [time, setTime] = useState(clockTime);
   useEffect(() => {

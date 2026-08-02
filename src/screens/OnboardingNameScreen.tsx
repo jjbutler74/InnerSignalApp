@@ -21,7 +21,7 @@ export function OnboardingNameScreen() {
     const trimmed = name.trim();
     if (!trimmed) return;
     await update({ name: trimmed });
-    nav.navigate('OnboardingSchedule');
+    nav.navigate('OnboardingTone');
   };
 
   return (
@@ -31,6 +31,7 @@ export function OnboardingNameScreen() {
           <View style={s.dots}>
             <View style={[s.dot, { backgroundColor: t.divider }]}/>
             <View style={[s.dot, s.dotActive, { backgroundColor: t.sage }]}/>
+            <View style={[s.dot, { backgroundColor: t.divider }]}/>
             <View style={[s.dot, { backgroundColor: t.divider }]}/>
           </View>
 

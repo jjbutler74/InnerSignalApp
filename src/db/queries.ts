@@ -1,5 +1,5 @@
 import { getDb, uid, today, localDateString, parseLocalDate } from './database';
-import type { Pack, Affirmation, JournalEntry, UserSettings, Completion, Slot } from '../types';
+import type { Pack, Affirmation, JournalEntry, UserSettings, Completion, Slot, TonePreference } from '../types';
 
 // ─── Settings ────────────────────────────────────────────────────────────────
 
@@ -23,6 +23,7 @@ export async function loadSettings(): Promise<Partial<UserSettings>> {
   if (map.theme            !== undefined) out.theme             = map.theme as UserSettings['theme'];
   if (map.favoritesOnly      !== undefined) out.favoritesOnly      = map.favoritesOnly === '1';
   if (map.onboardingComplete !== undefined) out.onboardingComplete = map.onboardingComplete === '1';
+  if (map.tonePreference     !== undefined) out.tonePreference     = map.tonePreference as UserSettings['tonePreference'];
   return out;
 }
 
@@ -43,6 +44,7 @@ export async function saveSettings(settings: Partial<UserSettings>): Promise<voi
   if (settings.theme            !== undefined) entries.push(['theme',             settings.theme]);
   if (settings.favoritesOnly      !== undefined) entries.push(['favoritesOnly',      settings.favoritesOnly ? '1' : '0']);
   if (settings.onboardingComplete !== undefined) entries.push(['onboardingComplete', settings.onboardingComplete ? '1' : '0']);
+  if (settings.tonePreference     !== undefined) entries.push(['tonePreference',     settings.tonePreference]);
 
   await db.withTransactionAsync(async () => {
     for (const [key, value] of entries) {
@@ -53,7 +55,7 @@ export async function saveSettings(settings: Partial<UserSettings>): Promise<voi
 
 // ─── Packs ───────────────────────────────────────────────────────────────────
 
-type PackRow = { id: string; name: string; tone: string; is_built_in: number; is_active: number };
+type PackRow = { id: string; name: string; tone: string; is_built_in: number; is_active: number; category: string };
 
 function rowToPack(r: PackRow): Pack {
   return {
@@ -62,6 +64,7 @@ function rowToPack(r: PackRow): Pack {
     tone: r.tone as Pack['tone'],
     isBuiltIn: r.is_built_in === 1,
     isActive:  r.is_active  === 1,
+    category:  (r.category === 'sage' ? 'sage' : 'iron') as Pack['category'],
   };
 }
 
@@ -139,16 +142,17 @@ export async function deleteAffirmation(id: string): Promise<void> {
 }
 
 export async function insertPackWithAffirmations(
-  pack: Omit<Pack, 'id'>,
+  pack: Omit<Pack, 'id' | 'category'> & { category?: Pack['category'] },
   texts: string[],
 ): Promise<void> {
   const db = await getDb();
   const packId = uid();
+  const category = pack.category ?? 'iron';
   const now = new Date().toISOString();
   await db.withTransactionAsync(async () => {
     await db.runAsync(
-      'INSERT OR IGNORE INTO packs (id, name, tone, is_built_in, is_active) VALUES (?, ?, ?, ?, ?)',
-      [packId, pack.name, pack.tone, 1, 1],
+      'INSERT OR IGNORE INTO packs (id, name, tone, is_built_in, is_active, category) VALUES (?, ?, ?, ?, ?, ?)',
+      [packId, pack.name, pack.tone, 1, 1, category],
     );
     for (const text of texts) {
       await db.runAsync(
@@ -157,6 +161,31 @@ export async function insertPackWithAffirmations(
       );
     }
   });
+}
+
+export async function deletePacksByCategory(category: Pack['category']): Promise<void> {
+  const db = await getDb();
+  await db.withTransactionAsync(async () => {
+    await db.runAsync(
+      'DELETE FROM affirmations WHERE pack_id IN (SELECT id FROM packs WHERE category = ? AND is_built_in = 1)',
+      [category],
+    );
+    await db.runAsync(
+      'DELETE FROM packs WHERE category = ? AND is_built_in = 1',
+      [category],
+    );
+  });
+}
+
+export async function setPackActiveByCategory(tone: TonePreference): Promise<void> {
+  const db = await getDb();
+  if (tone === 'balance') {
+    await db.runAsync('UPDATE packs SET is_active = 1 WHERE is_built_in = 1');
+  } else {
+    const other: Pack['category'] = tone === 'iron' ? 'sage' : 'iron';
+    await db.runAsync('UPDATE packs SET is_active = 1 WHERE category = ? AND is_built_in = 1', [tone]);
+    await db.runAsync('UPDATE packs SET is_active = 0 WHERE category = ? AND is_built_in = 1', [other]);
+  }
 }
 
 // ─── Journal ─────────────────────────────────────────────────────────────────
