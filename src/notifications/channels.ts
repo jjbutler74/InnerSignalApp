@@ -2,8 +2,19 @@ import * as Notifications from 'expo-notifications';
 
 type SoundSetting = 'bell' | 'chime' | 'silent';
 
+const CHANNEL_IDS = [
+  'morning-affirmation',
+  'midday-affirmation',
+  'evening-affirmation',
+  'gratitude-prompt',
+] as const;
+
 export async function setupChannels(sound: SoundSetting = 'bell') {
   const channelSound = sound === 'silent' ? null : sound;
+
+  // Android treats channel sound as write-once — delete channels first so the
+  // new sound actually takes effect (a no-op when the channel doesn't exist yet).
+  await Promise.all(CHANNEL_IDS.map(id => Notifications.deleteNotificationChannelAsync(id)));
 
   await Notifications.setNotificationChannelAsync('morning-affirmation', {
     name: 'Morning affirmation',

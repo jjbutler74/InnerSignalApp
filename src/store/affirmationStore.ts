@@ -15,15 +15,13 @@ interface AffirmationStore {
   packs: Pack[];
   affirmations: Affirmation[];
   slotAffirmations: SlotMap;
-  activeAffirmation: Affirmation | null; // derived: slotAffirmations[activeSlot]
-  activeSlot: AnchorSlot;
   activeDate: string;
   loaded: boolean;
 
   load: () => Promise<void>;
   setActiveTone: (tone: TonePreference) => Promise<void>;
   refreshDailyAffirmations: () => void;
-  selectSlotAffirmation: (slot: AnchorSlot) => void;
+  selectSlotAffirmation: (slot: AnchorSlot, excludeIds?: Set<string>) => void;
   validateSlotAffirmations: () => void;
   toggleFavorite: (id: string) => Promise<void>;
   markSeen: (id: string) => Promise<void>;
@@ -37,8 +35,6 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
   packs: [],
   affirmations: [],
   slotAffirmations: EMPTY_SLOTS,
-  activeAffirmation: null,
-  activeSlot: 'anchor1',
   activeDate: '',
   loaded: false,
 
@@ -53,57 +49,49 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
     if (tone === 'iron') await deletePacksByCategory('sage');
     if (tone === 'sage') await deletePacksByCategory('iron');
     await setPackActiveByCategory(tone);
-    // Reset activeDate so the next refreshDailyAffirmations takes the
-    // new-day branch and picks fresh from the tone-filtered pool, rather
-    // than the validate branch which only repicks slots that became invalid.
-    // This prevents TodayScreen's focus effect from showing a different
-    // affirmation than the one that was set here.
+    // Reset activeDate so next refreshDailyAffirmations picks fresh from
+    // the new-tone pool rather than just validating existing picks.
     set({ activeDate: '' });
     await get().load();
   },
 
-  // Called on every TodayScreen focus.
-  // - Updates activeSlot based on current time.
-  // - On a new calendar day, picks all 3 affirmations (locked in for the day).
-  // - Same day: just syncs activeSlot / activeAffirmation, no re-picking.
+  // Called on every TodayScreen focus and on cold-start notification taps.
+  // New day: picks all 3 affirmations, deduplicated.
+  // Same day: re-validates existing picks in case the pool changed.
   refreshDailyAffirmations: () => {
-    const { scheduleAnchor2, scheduleAnchor3 } = useSettingsStore.getState();
-    const toMins = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
-    const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
-    const slot: AnchorSlot =
-      nowMins < toMins(scheduleAnchor2) ? 'anchor1'
-    : nowMins < toMins(scheduleAnchor3) ? 'anchor2'
-    : 'anchor3';
-
     const date = today();
     const { activeDate } = get();
 
     if (date !== activeDate) {
-      // New day — pick fresh affirmations for all three slots
+      // New day — pick 3 unique affirmations, deduplicating across slots.
       set({ activeDate: date });
-      get().selectSlotAffirmation('anchor1');
-      get().selectSlotAffirmation('anchor2');
-      get().selectSlotAffirmation('anchor3');
+      const used = new Set<string>();
+      get().selectSlotAffirmation('anchor1', used);
+      const a1 = get().slotAffirmations.anchor1;
+      if (a1) used.add(a1.id);
+      get().selectSlotAffirmation('anchor2', used);
+      const a2 = get().slotAffirmations.anchor2;
+      if (a2) used.add(a2.id);
+      get().selectSlotAffirmation('anchor3', used);
     } else {
-      // Same day — make sure each locked-in pick is still valid (not
-      // deleted, not filtered out by favoritesOnly/pack changes since pick).
+      // Same day — repick only slots that became invalid (deleted, filtered out).
       get().validateSlotAffirmations();
     }
-
-    // Sync activeSlot and derive activeAffirmation
-    set(s => ({
-      activeSlot: slot,
-      activeAffirmation: s.slotAffirmations[slot] ?? null,
-    }));
   },
 
-  selectSlotAffirmation: (slot) => {
+  selectSlotAffirmation: (slot, excludeIds = new Set()) => {
     const { packs, affirmations } = get();
     const activePacks = new Set(packs.filter(p => p.isActive).map(p => p.id));
     const fromActivePacks = affirmations.filter(a => activePacks.has(a.packId));
     const { favoritesOnly } = useSettingsStore.getState();
     const favorites = fromActivePacks.filter(a => a.isFavorite);
-    const pool = favoritesOnly && favorites.length > 0 ? favorites : fromActivePacks;
+    const fullPool = favoritesOnly && favorites.length > 0 ? favorites : fromActivePacks;
+
+    // Prefer a unique pick; fall back to full pool when there aren't enough
+    // distinct affirmations to go around.
+    const pool = excludeIds.size > 0 && fullPool.length > excludeIds.size
+      ? fullPool.filter(a => !excludeIds.has(a.id))
+      : fullPool;
 
     if (!pool.length) {
       set(s => ({ slotAffirmations: { ...s.slotAffirmations, [slot]: null } }));
@@ -111,9 +99,6 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
     }
 
     // Deterministic date+slot hash, biased toward lower seenCount.
-    // If the pool has shrunk (e.g. a pick was deleted), this naturally
-    // lands on a different, still-available affirmation. A pool of one
-    // always resolves to that single affirmation.
     const sorted = [...pool].sort((a, b) => a.seenCount - b.seenCount);
     const dateSlotKey = `${today()}-${slot}`;
     let hash = 0;
@@ -132,10 +117,9 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
   },
 
   // Re-checks each locked-in slot pick against the current pool and
-  // repicks any that are no longer valid (deleted, or filtered out by
-  // favoritesOnly/active-pack changes made after the daily lock-in).
+  // repicks any that are no longer valid, excluding IDs from still-valid slots.
   validateSlotAffirmations: () => {
-    const { packs, affirmations, slotAffirmations } = get();
+    const { packs, affirmations } = get();
     const activePacks = new Set(packs.filter(p => p.isActive).map(p => p.id));
     const fromActivePacks = affirmations.filter(a => activePacks.has(a.packId));
     const { favoritesOnly } = useSettingsStore.getState();
@@ -144,23 +128,29 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
     const poolIds = new Set(pool.map(a => a.id));
 
     (['anchor1', 'anchor2', 'anchor3'] as const).forEach(slot => {
-      const current = slotAffirmations[slot];
+      const current = get().slotAffirmations[slot];
       if (current && poolIds.has(current.id)) return;
-      get().selectSlotAffirmation(slot);
+      // Build excludeIds from valid picks in other slots (read latest state
+      // so we see repicks from earlier iterations).
+      const excludeIds = new Set(
+        (['anchor1', 'anchor2', 'anchor3'] as const)
+          .filter(s => s !== slot)
+          .map(s => get().slotAffirmations[s])
+          .filter((a): a is Affirmation => a !== null && poolIds.has(a.id))
+          .map(a => a.id),
+      );
+      get().selectSlotAffirmation(slot, excludeIds);
     });
   },
 
   toggleFavorite: async (id) => {
-    const { affirmations, activeAffirmation } = get();
+    const { affirmations } = get();
     const aff = affirmations.find(a => a.id === id);
     if (!aff) return;
     await toggleFavorite(id, aff.isFavorite);
     const newFav = !aff.isFavorite;
     set(s => ({
       affirmations: affirmations.map(a => a.id === id ? { ...a, isFavorite: newFav } : a),
-      activeAffirmation: activeAffirmation?.id === id
-        ? { ...activeAffirmation, isFavorite: newFav }
-        : activeAffirmation,
       slotAffirmations: {
         anchor1: s.slotAffirmations.anchor1?.id === id ? { ...s.slotAffirmations.anchor1, isFavorite: newFav } : s.slotAffirmations.anchor1,
         anchor2: s.slotAffirmations.anchor2?.id === id ? { ...s.slotAffirmations.anchor2, isFavorite: newFav } : s.slotAffirmations.anchor2,
@@ -187,6 +177,5 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
       affirmations: s.affirmations.filter(a => a.id !== id),
     }));
     get().validateSlotAffirmations();
-    set(s => ({ activeAffirmation: s.slotAffirmations[s.activeSlot] ?? null }));
   },
 }));

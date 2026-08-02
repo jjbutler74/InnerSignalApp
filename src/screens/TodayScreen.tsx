@@ -170,7 +170,9 @@ export function TodayScreen() {
           {'.'}
         </Display>
         <Text style={[s.subtext, { color: t.muted, fontFamily: fonts.sans }]}>
-          {`Your next anchor lands at ${nextAnchor}.`}
+          {nextAnchor === 'tomorrow'
+            ? 'Your next anchor lands tomorrow.'
+            : `Your next anchor lands at ${nextAnchor}.`}
         </Text>
       </View>
 

@@ -142,6 +142,10 @@ export async function snoozeAffirmationNotification(
   const { status } = await Notifications.getPermissionsAsync();
   if (status !== 'granted') return;
 
+  const channelId = slot === 'anchor1' ? 'morning-affirmation'
+    : slot === 'anchor3' ? 'evening-affirmation'
+    : 'midday-affirmation';
+
   await Notifications.scheduleNotificationAsync({
     content: {
       title: 'Ready when you are',
@@ -152,7 +156,7 @@ export async function snoozeAffirmationNotification(
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
       seconds: 3600,
-      channelId: 'midday-affirmation',
+      channelId,
     },
   });
 }
