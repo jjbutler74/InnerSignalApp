@@ -55,20 +55,27 @@ function navigateForNotification(response: Notifications.NotificationResponse): 
   // been backgrounded overnight, leaving the store with yesterday's picks.
   useAffirmationStore.getState().refreshDailyAffirmations();
 
-  // Stale notification (delivered on a previous calendar day). The app
-  // dismisses these from the tray on every launch, but a cold-start tap
-  // can still arrive here before that cleanup runs. Just land on Today.
+  const slot = response.notification.request.content.data?.slot as string | undefined;
+
+  if (slot === 'gratitude') {
+    // Gratitude always routes based on today's state, regardless of when the
+    // notification was delivered. A lingering tray notification from a previous
+    // session should still land on EveningNotif if today's entry isn't written.
+    const done = useJournalStore.getState().entries.some(e => e.date === today());
+    navigationRef.navigate(done ? 'GratitudeComposer' : 'EveningNotif');
+    return;
+  }
+
+  // Stale affirmation notification (delivered on a previous calendar day). The
+  // app dismisses these from the tray on every foreground transition, but a
+  // cold-start tap can still arrive here before that cleanup runs.
   const notifDay = localDateString(new Date(response.notification.date * 1000));
   if (notifDay !== today()) {
     navigationRef.navigate('Today');
     return;
   }
 
-  const slot = response.notification.request.content.data?.slot as string | undefined;
-  if (slot === 'gratitude') {
-    const done = useJournalStore.getState().entries.some(e => e.date === today());
-    navigationRef.navigate(done ? 'GratitudeComposer' : 'EveningNotif');
-  } else if (slot === 'anchor1' || slot === 'anchor2' || slot === 'anchor3') {
+  if (slot === 'anchor1' || slot === 'anchor2' || slot === 'anchor3') {
     // Compute the active slot directly from current time — no store dependency.
     const schedule = useSettingsStore.getState();
     const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
