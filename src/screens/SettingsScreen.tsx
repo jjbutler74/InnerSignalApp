@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Alert, Share } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import * as Notifications from 'expo-notifications';
 import { setupChannels } from '../notifications/channels';
 import { scheduleAllNotifications } from '../notifications/scheduler';
 import { playPreview } from '../utils/sound';
@@ -132,27 +131,6 @@ export function SettingsScreen() {
     }
   };
 
-  const handleTestNotification = async () => {
-    const { status } = await Notifications.getPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('No permission', 'Enable notifications in device settings first.');
-      return;
-    }
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Evening gratitude',
-        body: 'What landed today?',
-        data: { slot: 'gratitude' },
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: 5,
-        channelId: 'gratitude-prompt',
-      },
-    });
-    Alert.alert('Incoming', 'A gratitude notification will arrive in 5 seconds.');
-  };
-
   return (
     <Screen>
       <View style={s.header}>
@@ -195,11 +173,6 @@ export function SettingsScreen() {
             label="On-time reminders"
             value="Allow exact alarms"
             onPress={openExactAlarmSettings}
-          />
-          <PressableRow
-            label="Test notification"
-            value="Send in 5 sec"
-            onPress={handleTestNotification}
           />
           <View style={[s.toggleRow, { borderTopWidth: 1, borderTopColor: t.hairline }]}>
             <Text style={[s.toggleLabel, { color: t.ink, fontFamily: fonts.sansMedium }]}>Favorites only</Text>
