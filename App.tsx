@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, ActivityIndicator, AppState } from 'react-native';
+import { View, ActivityIndicator, AppState, Alert, Platform, PermissionsAndroid } from 'react-native';
 import { seedIfEmpty, seedSagePacks } from './src/db/seed';
 import { useSettingsStore } from './src/store/settingsStore';
 import { useAffirmationStore } from './src/store/affirmationStore';
@@ -32,6 +32,7 @@ import { setupChannels } from './src/notifications/channels';
 import { scheduleAllNotifications, cleanupNotifications } from './src/notifications/scheduler';
 import { initAudio } from './src/utils/sound';
 import { isAnchorMissed } from './src/utils/anchorWindow';
+import { openExactAlarmSettings } from './src/utils/exactAlarm';
 import { today, localDateString } from './src/db/database';
 
 import { TodayScreen } from './src/screens/TodayScreen';
@@ -183,6 +184,8 @@ export default function App() {
   const responseListenerRef = useRef<Notifications.EventSubscription | null>(null);
   const lastNotificationResponse = Notifications.useLastNotificationResponse();
   const handledResponseIdRef = useRef<string | null>(null);
+  const exactAlarmCheckedRef = useRef(false);
+  const lastRescheduledRef = useRef(0);
 
   useEffect(() => {
     if (!fontsLoaded) return;
@@ -230,13 +233,48 @@ export default function App() {
     return () => responseListenerRef.current?.remove();
   }, []);
 
-  // Every time the app comes to foreground, evict superseded anchor
-  // notifications and any leftovers from a previous calendar day.
+  // On Android 12+, check if SCHEDULE_EXACT_ALARM was granted. Without it
+  // the OS uses inexact delivery (up to 1 hr late). Show a one-per-session
+  // alert so the user can open the system settings to fix it.
+  useEffect(() => {
+    if (!storesReady || exactAlarmCheckedRef.current) return;
+    exactAlarmCheckedRef.current = true;
+    if (Platform.OS !== 'android' || Number(Platform.Version) < 31) return;
+    (async () => {
+      try {
+        const granted = await PermissionsAndroid.check(
+          'android.permission.SCHEDULE_EXACT_ALARM' as never,
+        );
+        if (!granted) {
+          Alert.alert(
+            'Enable on-time notifications',
+            'Without exact alarm access your anchors and gratitude prompts may arrive up to an hour late. Tap "Open Settings" and enable "Alarms & reminders" for InnerSignal.',
+            [
+              { text: 'Later', style: 'cancel' },
+              { text: 'Open Settings', onPress: openExactAlarmSettings },
+            ],
+          );
+        }
+      } catch {}
+    })();
+  }, [storesReady]);
+
+  // Every time the app comes to foreground: reschedule notifications (so
+  // exact alarms are used immediately after the user grants the permission)
+  // and evict stale/superseded notifications from the tray.
+  // 30-second debounce avoids double-firing right after startup.
   useEffect(() => {
     if (!storesReady) return;
+    lastRescheduledRef.current = Date.now();
     const sub = AppState.addEventListener('change', nextState => {
       if (nextState === 'active') {
-        cleanupNotifications(useSettingsStore.getState());
+        const settings = useSettingsStore.getState();
+        const now = Date.now();
+        if (now - lastRescheduledRef.current > 30_000) {
+          lastRescheduledRef.current = now;
+          scheduleAllNotifications(settings).catch(() => {});
+        }
+        cleanupNotifications(settings);
       }
     });
     return () => sub.remove();
