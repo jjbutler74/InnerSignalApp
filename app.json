@@ -2,7 +2,7 @@
   "expo": {
     "name": "InnerSignal",
     "slug": "innersignal",
-    "version": "1.0.24",
+    "version": "1.0.25",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -17,7 +17,7 @@
         "backgroundColor": "#1A2B4A"
       },
       "package": "com.innersignal.app",
-      "versionCode": 25,
+      "versionCode": 26,
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.POST_NOTIFICATIONS",
