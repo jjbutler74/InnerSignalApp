@@ -23,7 +23,8 @@ export async function loadSettings(): Promise<Partial<UserSettings>> {
   if (map.theme            !== undefined) out.theme             = map.theme as UserSettings['theme'];
   if (map.favoritesOnly      !== undefined) out.favoritesOnly      = map.favoritesOnly === '1';
   if (map.onboardingComplete !== undefined) out.onboardingComplete = map.onboardingComplete === '1';
-  if (map.tonePreference     !== undefined) out.tonePreference     = map.tonePreference as UserSettings['tonePreference'];
+  if (map.tonePreference        !== undefined) out.tonePreference        = map.tonePreference as UserSettings['tonePreference'];
+  if (map.exactAlarmPromptSeen  !== undefined) out.exactAlarmPromptSeen  = map.exactAlarmPromptSeen === '1';
   return out;
 }
 
@@ -44,7 +45,8 @@ export async function saveSettings(settings: Partial<UserSettings>): Promise<voi
   if (settings.theme            !== undefined) entries.push(['theme',             settings.theme]);
   if (settings.favoritesOnly      !== undefined) entries.push(['favoritesOnly',      settings.favoritesOnly ? '1' : '0']);
   if (settings.onboardingComplete !== undefined) entries.push(['onboardingComplete', settings.onboardingComplete ? '1' : '0']);
-  if (settings.tonePreference     !== undefined) entries.push(['tonePreference',     settings.tonePreference]);
+  if (settings.tonePreference        !== undefined) entries.push(['tonePreference',        settings.tonePreference]);
+  if (settings.exactAlarmPromptSeen  !== undefined) entries.push(['exactAlarmPromptSeen',  settings.exactAlarmPromptSeen ? '1' : '0']);
 
   await db.withTransactionAsync(async () => {
     for (const [key, value] of entries) {

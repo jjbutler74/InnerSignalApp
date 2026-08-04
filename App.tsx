@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, ActivityIndicator, AppState, Alert, Platform, PermissionsAndroid } from 'react-native';
+import { View, ActivityIndicator, AppState, Alert, Platform } from 'react-native';
 import { seedIfEmpty, seedSagePacks } from './src/db/seed';
 import { useSettingsStore } from './src/store/settingsStore';
 import { useAffirmationStore } from './src/store/affirmationStore';
@@ -233,30 +233,24 @@ export default function App() {
     return () => responseListenerRef.current?.remove();
   }, []);
 
-  // On Android 12+, check if SCHEDULE_EXACT_ALARM was granted. Without it
-  // the OS uses inexact delivery (up to 1 hr late). Show a one-per-session
-  // alert so the user can open the system settings to fix it.
+  // On Android 12+, show a one-time prompt to enable exact alarms so
+  // anchors and gratitude fire at the right time. Shown once ever —
+  // after that the Settings row ("On-time reminders") is the re-entry point.
   useEffect(() => {
     if (!storesReady || exactAlarmCheckedRef.current) return;
     exactAlarmCheckedRef.current = true;
     if (Platform.OS !== 'android' || Number(Platform.Version) < 31) return;
-    (async () => {
-      try {
-        const granted = await PermissionsAndroid.check(
-          'android.permission.SCHEDULE_EXACT_ALARM' as never,
-        );
-        if (!granted) {
-          Alert.alert(
-            'Enable on-time notifications',
-            'Without exact alarm access your anchors and gratitude prompts may arrive up to an hour late. Tap "Open Settings" and enable "Alarms & reminders" for InnerSignal.',
-            [
-              { text: 'Later', style: 'cancel' },
-              { text: 'Open Settings', onPress: openExactAlarmSettings },
-            ],
-          );
-        }
-      } catch {}
-    })();
+    const { exactAlarmPromptSeen } = useSettingsStore.getState();
+    if (exactAlarmPromptSeen) return;
+    useSettingsStore.getState().update({ exactAlarmPromptSeen: true });
+    Alert.alert(
+      'Enable on-time notifications',
+      'Without exact alarm access your anchors and gratitude prompts may arrive up to an hour late. Tap "Open Settings" and enable "Alarms & reminders" for InnerSignal.',
+      [
+        { text: 'Later', style: 'cancel' },
+        { text: 'Open Settings', onPress: openExactAlarmSettings },
+      ],
+    );
   }, [storesReady]);
 
   // Every time the app comes to foreground: reschedule notifications (so
