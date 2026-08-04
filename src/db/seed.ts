@@ -96,7 +96,7 @@ export async function seedSagePacks(): Promise<void> {
       'I give myself permission to rest without having to earn it first.',
       'This moment is enough. I am enough in it.',
       'I listen to what my body and heart are telling me.',
-      'Pausing is not giving up — it is gathering myself.',
+      'Pausing is not giving up; it is gathering myself.',
       'I do not need to rush what is unfolding.',
       'There is wisdom in being still.',
     ],
@@ -106,7 +106,7 @@ export async function seedSagePacks(): Promise<void> {
     { name: 'Growth', tone: 'amber', isBuiltIn: true, isActive: true, category: 'sage' },
     [
       'I am becoming, and that is always enough.',
-      'My setbacks are not proof I am broken — they are part of the path.',
+      'My setbacks are not proof I am broken; they are part of the path.',
       'I hold my imperfections with curiosity, not judgement.',
       'Progress does not have to look impressive to be real.',
       'I release the version of me I thought I had to be.',
