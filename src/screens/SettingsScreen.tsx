@@ -20,6 +20,7 @@ import { useAffirmationStore } from '../store/affirmationStore';
 import { useJournalStore } from '../store/journalStore';
 import { useStatsStore } from '../store/statsStore';
 import { resetDatabase } from '../db/database';
+import { seedIronPacks, seedSagePacks } from '../db/seed';
 import { getJournalEntries } from '../db/queries';
 import { DEFAULT_SETTINGS } from '../types';
 import type { UserSettings } from '../types';
@@ -83,6 +84,8 @@ export function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             await resetDatabase();
+            await seedIronPacks();
+            await seedSagePacks();
             useSettingsStore.setState({ ...DEFAULT_SETTINGS, loaded: true });
             await Promise.all([
               useAffirmationStore.getState().load(),

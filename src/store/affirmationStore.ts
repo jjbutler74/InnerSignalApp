@@ -5,6 +5,7 @@ import {
   setPackActiveByCategory, deletePacksByCategory, saveSettings,
 } from '../db/queries';
 import { today } from '../db/database';
+import { seedIronPacks, seedSagePacks } from '../db/seed';
 import { useSettingsStore } from './settingsStore';
 import type { Pack, Affirmation, Slot, TonePreference } from '../types';
 
@@ -46,8 +47,14 @@ export const useAffirmationStore = create<AffirmationStore>((set, get) => ({
 
   setActiveTone: async (tone) => {
     await saveSettings({ tonePreference: tone });
-    if (tone === 'iron') await deletePacksByCategory('sage');
-    if (tone === 'sage') await deletePacksByCategory('iron');
+    if (tone === 'iron') {
+      await seedIronPacks();
+      await deletePacksByCategory('sage');
+    }
+    if (tone === 'sage') {
+      await seedSagePacks();
+      await deletePacksByCategory('iron');
+    }
     await setPackActiveByCategory(tone);
     // Reset activeDate so next refreshDailyAffirmations picks fresh from
     // the new-tone pool rather than just validating existing picks.

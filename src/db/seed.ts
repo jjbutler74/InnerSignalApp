@@ -1,11 +1,7 @@
 import { getDb } from './database';
 import { insertPackWithAffirmations } from './queries';
 
-export async function seedIfEmpty(): Promise<void> {
-  const db = await getDb();
-  const existing = await db.getFirstAsync<{ n: number }>('SELECT COUNT(*) as n FROM packs');
-  if ((existing?.n ?? 0) > 0) return;
-
+async function insertIronPacks(): Promise<void> {
   await insertPackWithAffirmations(
     { name: 'Code', tone: 'sage', isBuiltIn: true, isActive: true, category: 'iron' },
     [
@@ -60,8 +56,32 @@ export async function seedIfEmpty(): Promise<void> {
       'I leave people, places, and work better than I found them.',
     ],
   );
+}
 
+export async function seedIfEmpty(): Promise<void> {
+  const db = await getDb();
+  const existing = await db.getFirstAsync<{ n: number }>('SELECT COUNT(*) as n FROM packs');
+  if ((existing?.n ?? 0) > 0) return;
+
+  await insertIronPacks();
   await seedSagePacks();
+}
+
+// Idempotent. Re-seeds iron packs if they were permanently deleted (e.g. by a
+// prior sage-tone selection). Skipped if any iron packs already exist, or if the
+// user deliberately chose sage (so sage-only mode is preserved).
+export async function seedIronPacks(): Promise<void> {
+  const db = await getDb();
+  const pref = await db.getFirstAsync<{ value: string }>(
+    "SELECT value FROM settings WHERE key = 'tonePreference'",
+  );
+  if (pref?.value === 'sage') return;
+  const existing = await db.getFirstAsync<{ n: number }>(
+    "SELECT COUNT(*) as n FROM packs WHERE category = 'iron'",
+  );
+  if ((existing?.n ?? 0) > 0) return;
+
+  await insertIronPacks();
 }
 
 // Idempotent — safe to call on every launch.
