@@ -85,14 +85,9 @@ function navigateForNotification(response: Notifications.NotificationResponse): 
       nowMins < toMins(schedule.scheduleAnchor2) ? 'anchor1'
     : nowMins < toMins(schedule.scheduleAnchor3) ? 'anchor2'
     : 'anchor3';
-    // Stale notification — its slot no longer matches the current time window.
-    // Land on Today; the correct affirmation is already shown there.
-    if (slot !== currentSlot) {
-      navigationRef.navigate('Today');
-      return;
-    }
     const { completedSlotsToday } = useStatsStore.getState();
-    const reviewOnly = !completedSlotsToday.has(slot) && isAnchorMissed(slot, schedule, nowMins);
+    // Past-slot tap (same day, different time window): show affirmation in review-only mode.
+    const reviewOnly = slot !== currentSlot || (!completedSlotsToday.has(slot) && isAnchorMissed(slot, schedule, nowMins));
     navigationRef.navigate('AffirmationMoment', { slot, reviewOnly });
   }
 }
