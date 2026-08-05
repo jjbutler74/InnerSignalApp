@@ -10,7 +10,6 @@ import { useTheme } from '../theme/ThemeContext';
 import { useSettingsStore } from '../store/settingsStore';
 import * as Notifications from 'expo-notifications';
 import { scheduleAllNotifications } from '../notifications/scheduler';
-import { openExactAlarmSettings } from '../utils/exactAlarm';
 import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'OnboardingSchedule'>;
@@ -70,11 +69,6 @@ export function OnboardingScheduleScreen() {
         [{ text: 'OK', onPress: goToApp }],
       );
     } else {
-      // Needed on Android 12+ so anchors fire at their exact time even
-      // when the app isn't open, instead of being delayed by the OS.
-      // Mark seen so the App-level alert doesn't fire again on return.
-      await update({ exactAlarmPromptSeen: true });
-      await openExactAlarmSettings();
       await scheduleAllNotifications(useSettingsStore.getState());
       goToApp();
     }
