@@ -178,6 +178,7 @@ export default function App() {
   const loadAffirmations = useAffirmationStore(s => s.load);
   const loadJournal      = useJournalStore(s => s.load);
   const loadStats        = useStatsStore(s => s.load);
+  const onboardingComplete = useSettingsStore(s => s.onboardingComplete);
 
   const [storesReady, setStoresReady] = useState(false);
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList>('Today');
@@ -236,11 +237,14 @@ export default function App() {
   // On Android 12+, show a one-time prompt to enable exact alarms so
   // anchors and gratitude fire at the right time. Shown once ever —
   // after that the Settings row ("On-time reminders") is the re-entry point.
+  // Skipped until onboarding is complete so it doesn't appear before the user
+  // has even granted notification permission.
   useEffect(() => {
     if (!storesReady || exactAlarmCheckedRef.current) return;
-    exactAlarmCheckedRef.current = true;
     if (Platform.OS !== 'android' || Number(Platform.Version) < 31) return;
-    const { exactAlarmPromptSeen } = useSettingsStore.getState();
+    const { exactAlarmPromptSeen, onboardingComplete: complete } = useSettingsStore.getState();
+    if (!complete) return; // leave ref unset so this re-runs when onboarding finishes
+    exactAlarmCheckedRef.current = true;
     if (exactAlarmPromptSeen) return;
     useSettingsStore.getState().update({ exactAlarmPromptSeen: true });
     Alert.alert(
@@ -251,7 +255,7 @@ export default function App() {
         { text: 'Open Settings', onPress: openExactAlarmSettings },
       ],
     );
-  }, [storesReady]);
+  }, [storesReady, onboardingComplete]);
 
   // Every time the app comes to foreground: reschedule notifications (so
   // exact alarms are used immediately after the user grants the permission)

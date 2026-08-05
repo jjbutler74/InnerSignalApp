@@ -72,6 +72,8 @@ export function OnboardingScheduleScreen() {
     } else {
       // Needed on Android 12+ so anchors fire at their exact time even
       // when the app isn't open, instead of being delayed by the OS.
+      // Mark seen so the App-level alert doesn't fire again on return.
+      await update({ exactAlarmPromptSeen: true });
       await openExactAlarmSettings();
       await scheduleAllNotifications(useSettingsStore.getState());
       goToApp();
