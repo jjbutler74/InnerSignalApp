@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, ActivityIndicator, AppState, Alert, Platform } from 'react-native';
+import { View, ActivityIndicator, AppState } from 'react-native';
 import { seedIfEmpty, seedSagePacks } from './src/db/seed';
 import { useSettingsStore } from './src/store/settingsStore';
 import { useAffirmationStore } from './src/store/affirmationStore';
@@ -32,7 +32,6 @@ import { setupChannels } from './src/notifications/channels';
 import { scheduleAllNotifications, cleanupNotifications } from './src/notifications/scheduler';
 import { initAudio } from './src/utils/sound';
 import { isAnchorMissed } from './src/utils/anchorWindow';
-import { openExactAlarmSettings } from './src/utils/exactAlarm';
 import { today, localDateString } from './src/db/database';
 
 import { TodayScreen } from './src/screens/TodayScreen';
@@ -179,14 +178,11 @@ export default function App() {
   const loadAffirmations = useAffirmationStore(s => s.load);
   const loadJournal      = useJournalStore(s => s.load);
   const loadStats        = useStatsStore(s => s.load);
-  const onboardingComplete = useSettingsStore(s => s.onboardingComplete);
-
   const [storesReady, setStoresReady] = useState(false);
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList>('Today');
   const responseListenerRef = useRef<Notifications.EventSubscription | null>(null);
   const lastNotificationResponse = Notifications.useLastNotificationResponse();
   const handledResponseIdRef = useRef<string | null>(null);
-  const exactAlarmCheckedRef = useRef(false);
   const lastRescheduledRef = useRef(0);
 
   useEffect(() => {
@@ -234,29 +230,6 @@ export default function App() {
     });
     return () => responseListenerRef.current?.remove();
   }, []);
-
-  // On Android 12+, show a one-time prompt to enable exact alarms so
-  // anchors and gratitude fire at the right time. Shown once ever —
-  // after that the Settings row ("On-time reminders") is the re-entry point.
-  // Skipped until onboarding is complete so it doesn't appear before the user
-  // has even granted notification permission.
-  useEffect(() => {
-    if (!storesReady || exactAlarmCheckedRef.current) return;
-    if (Platform.OS !== 'android' || Number(Platform.Version) < 31) return;
-    const { exactAlarmPromptSeen, onboardingComplete: complete } = useSettingsStore.getState();
-    if (!complete) return; // leave ref unset so this re-runs when onboarding finishes
-    exactAlarmCheckedRef.current = true;
-    if (exactAlarmPromptSeen) return;
-    useSettingsStore.getState().update({ exactAlarmPromptSeen: true });
-    Alert.alert(
-      'Enable on-time notifications',
-      'Without exact alarm access your anchors and gratitude prompts may arrive up to an hour late. Tap "Open Settings" and enable "Alarms & reminders" for InnerSignal.',
-      [
-        { text: 'Later', style: 'cancel' },
-        { text: 'Open Settings', onPress: openExactAlarmSettings },
-      ],
-    );
-  }, [storesReady, onboardingComplete]);
 
   // Every time the app comes to foreground: reschedule notifications (so
   // exact alarms are used immediately after the user grants the permission)
