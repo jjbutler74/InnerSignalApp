@@ -86,9 +86,15 @@ function navigateForNotification(response: Notifications.NotificationResponse): 
     : nowMins < toMins(schedule.scheduleAnchor3) ? 'anchor2'
     : 'anchor3';
     const { completedSlotsToday } = useStatsStore.getState();
-    // Past-slot tap (same day, different time window): show affirmation in review-only mode.
+    // Past-slot tap (same day, different time window): go straight to review-only affirmation.
+    // Current-slot tap: go through LockScreen so the user can read the affirmation and
+    // choose to engage ("Read & absorb") or snooze, rather than landing in the timer directly.
     const reviewOnly = slot !== currentSlot || (!completedSlotsToday.has(slot) && isAnchorMissed(slot, schedule, nowMins));
-    navigationRef.navigate('AffirmationMoment', { slot, reviewOnly });
+    if (reviewOnly) {
+      navigationRef.navigate('AffirmationMoment', { slot, reviewOnly: true });
+    } else {
+      navigationRef.navigate('Lock', { slot });
+    }
   }
 }
 
