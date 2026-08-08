@@ -44,7 +44,8 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
     const activeDates = new Set([...completionDates, ...journalDates]);
     const streak = computeStreak(activeDates);
-    const lastCompleted = completionDates[0] ?? journalDates[0] ?? null;
+    const candidates = [completionDates[0], journalDates[0]].filter((d): d is string => d != null);
+    const lastCompleted = candidates.length > 0 ? candidates.reduce((a, b) => (a > b ? a : b)) : null;
     const weeklyCompletions = computeWeeklyCompletions(activeDates);
 
     set({
