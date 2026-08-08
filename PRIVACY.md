@@ -22,7 +22,7 @@ InnerSignal has no backend server, no user accounts, and no sign-in of any kind.
 
 ## Third-party services
 
-InnerSignal does not use any analytics, advertising, or crash-reporting services. No data is shared with third parties. The only external data flow is Android's own encrypted cloud backup, which is controlled by you in your device settings and is not accessible to InnerSignal or any third party.
+InnerSignal does not use any analytics, advertising, or crash-reporting services. No data is shared with third parties by InnerSignal. Android backup is handled by Google as part of your device backup settings. InnerSignal's developer cannot access or retrieve these backups.
 
 ## Permissions
 
