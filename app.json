@@ -55,7 +55,8 @@
         }
       ],
       "./plugins/withReleaseSigning",
-      "./plugins/withRemovedPermissions"
+      "./plugins/withRemovedPermissions",
+      "./plugins/withNoBackup"
     ]
   }
 }

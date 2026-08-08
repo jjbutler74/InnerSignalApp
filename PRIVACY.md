@@ -10,7 +10,7 @@ InnerSignal does not collect, transmit, or share any of your personal data. Ever
 
 ## What data the app stores
 
-InnerSignal stores the following information locally on your device only, using a local database (SQLite) that is never synced or uploaded anywhere:
+InnerSignal stores the following information locally on your device only, using a local database (SQLite) that is never synced or uploaded anywhere. Android's automatic backup is explicitly disabled (`android:allowBackup="false"`), so the database cannot participate in Google Drive backup or device-to-device transfers.
 
 - Your name, if you choose to enter one
 - Your notification schedule preferences (affirmation times, gratitude time, quiet hours)
