@@ -58,7 +58,8 @@ export function AffirmationMomentScreen() {
   );
   const sound = useSettingsStore(s => s.sound);
 
-  const breathAnim = useRef(new Animated.Value(0)).current;
+  const breathAnim  = useRef(new Animated.Value(0)).current;
+  const feltItFired = useRef(false);
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
@@ -99,6 +100,8 @@ export function AffirmationMomentScreen() {
 
   const handleFeltIt = async () => {
     if (!affirmation || alreadyDone) { nav.navigate('Today'); return; }
+    if (feltItFired.current) return;
+    feltItFired.current = true;
     try {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       if (sound !== 'silent') playPreview(sound);
