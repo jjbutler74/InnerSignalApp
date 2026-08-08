@@ -1,11 +1,14 @@
-import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, Pressable, StyleSheet, AppState } from 'react-native';
+import type { AppStateStatus, NativeEventSubscription } from 'react-native';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '../components/Screen';
 import { Display, DisplayItalic } from '../components/Typography';
 import { useTheme } from '../theme/ThemeContext';
 import { openExactAlarmSettings } from '../utils/exactAlarm';
+import { scheduleAllNotifications } from '../notifications/scheduler';
+import { useSettingsStore } from '../store/settingsStore';
 import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'OnboardingAlarm'>;
@@ -13,11 +16,29 @@ type Nav = NativeStackNavigationProp<RootStackParamList, 'OnboardingAlarm'>;
 export function OnboardingAlarmScreen() {
   const { t, fonts } = useTheme();
   const nav = useNavigation<Nav>();
+  const alarmSubRef = useRef<NativeEventSubscription | null>(null);
+
+  // Clean up the one-shot listener if the user skips before returning from settings.
+  useEffect(() => {
+    return () => { alarmSubRef.current?.remove(); };
+  }, []);
 
   const goToApp = () =>
     nav.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Lock' }] }));
 
   const handleEnable = async () => {
+    // Register a one-shot foreground listener before opening settings so that
+    // when the user returns (having granted or denied the permission), we
+    // reschedule immediately — bypassing the global 30-second debounce that
+    // would otherwise leave the first notification batch inexact.
+    alarmSubRef.current = AppState.addEventListener('change', (nextState: AppStateStatus) => {
+      if (nextState === 'active') {
+        alarmSubRef.current?.remove();
+        alarmSubRef.current = null;
+        scheduleAllNotifications(useSettingsStore.getState()).catch(() => {});
+      }
+    });
+
     await openExactAlarmSettings();
     goToApp();
   };
