@@ -49,6 +49,7 @@ import { GratitudeComposerScreen } from './src/screens/GratitudeComposerScreen';
 import { GratitudeJournalScreen } from './src/screens/GratitudeJournalScreen';
 import { WeeklyRecapScreen } from './src/screens/WeeklyRecapScreen';
 import { OnboardingToneScreen } from './src/screens/OnboardingToneScreen';
+import { OnboardingAlarmScreen } from './src/screens/OnboardingAlarmScreen';
 
 function navigateForNotification(response: Notifications.NotificationResponse): void {
   // Refresh daily picks before reading slotAffirmations — the app may have
@@ -115,6 +116,7 @@ export type RootStackParamList = {
   OnboardingName: undefined;
   OnboardingTone: undefined;
   OnboardingSchedule: undefined;
+  OnboardingAlarm: undefined;
   Lock: { slot?: 'anchor1' | 'anchor2' | 'anchor3' };
   Today: undefined;
   AffirmationMoment: { slot: 'anchor1' | 'anchor2' | 'anchor3'; reviewOnly?: boolean };
@@ -146,6 +148,7 @@ function AppNavigator({ initialRoute }: { initialRoute: keyof RootStackParamList
         <Stack.Screen name="OnboardingName" component={OnboardingNameScreen}/>
         <Stack.Screen name="OnboardingTone" component={OnboardingToneScreen}/>
         <Stack.Screen name="OnboardingSchedule" component={OnboardingScheduleScreen}/>
+        <Stack.Screen name="OnboardingAlarm" component={OnboardingAlarmScreen}/>
         <Stack.Screen name="Lock" component={LockScreen}/>
         <Stack.Screen name="Today" component={TodayScreen}/>
         <Stack.Screen name="AffirmationMoment" component={AffirmationMomentScreen} options={{ animation: 'slide_from_bottom' }}/>

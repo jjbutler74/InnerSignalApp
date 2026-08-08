@@ -70,7 +70,7 @@ export function OnboardingScheduleScreen() {
       );
     } else {
       await scheduleAllNotifications(useSettingsStore.getState());
-      goToApp();
+      nav.navigate('OnboardingAlarm');
     }
   };
 
@@ -82,6 +82,7 @@ export function OnboardingScheduleScreen() {
           <View style={[s.dot, { backgroundColor: t.divider }]}/>
           <View style={[s.dot, { backgroundColor: t.divider }]}/>
           <View style={[s.dot, s.dotActive, { backgroundColor: t.sage }]}/>
+          <View style={[s.dot, { backgroundColor: t.divider }]}/>
         </View>
 
         <Display style={{ fontSize: 36, lineHeight: 40, letterSpacing: -0.5, color: t.ink, marginTop: 16, marginBottom: 6 }}>
