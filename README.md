@@ -59,8 +59,10 @@ A **13-day streak counter** and **weekly mood arc** give you a shape of your pra
 ### Notification scheduling
 Uses individual `DATE` triggers (not `DAILY`/`WEEKLY` repeating) so past-today times are simply skipped rather than firing immediately as catch-up. Reschedules the next 7 days on every app launch. Requires `SCHEDULE_EXACT_ALARM` permission declared in `app.json` and granted by the user via "Alarms & reminders" in system settings.
 
-### Stale notification handling
-Notifications delivered on a previous calendar day are detected at tap-time by comparing `notification.date` to today's local date. Stale affirmation notifications open in review-only mode (no streak credit). Stale gratitude notifications open the composer with `targetDate` set to the delivery date, so the entry saves to the correct past day rather than today.
+### Notification tap routing
+Current-slot affirmation taps go to **LockScreen** (affirmation preview + "Read & absorb" / "Snooze" choice), then on to **AffirmationMoment**. Past-slot taps (notification delivered in a previous time window, same day) go directly to AffirmationMoment in review-only mode (no streak credit). Notifications from a previous calendar day also open review-only.
+
+Gratitude notifications always route based on **today's** journal state, regardless of when the notification was delivered — if today's entry is already written they open GratitudeComposer (edit mode), otherwise EveningNotif. The journal entry always saves to `today()`.
 
 ### Slot status model
 Each affirmation slot has one of four statuses derived purely from current time and completion state — no extra DB columns:
@@ -153,7 +155,8 @@ No data leaves the device. No accounts. No analytics SDK. No crash reporting. No
 
 | Version | Notes |
 |---|---|
-| 1.0.21 | Stale gratitude notifications save to correct past date; stale affirmation notifications open review-only |
+| 1.0.27 | Affirmation notification taps go through LockScreen (preview + snooze choice); gratitude notifications always route to today's state; reset no longer clears affirmations when tone was previously switched; duplicate notification prompts removed from onboarding |
+| 1.0.21 | Stale affirmation notifications open in review-only mode (no streak credit); gratitude notification routing based on today's journal state |
 | 1.0.20 | Notification cold-start fix; lock screen / notification bar tap navigates directly to correct screen; filled heart icons; stats cards navigate to weekly recap; single breathing instruction per phase |
 | 1.0.19 | Gratitude row time-gating; affirmation row locking before window; auto-miss on window close; exact alarm scheduling; 7-day rolling DATE triggers |
 | 1.0.13 | Initial closed testing release |
