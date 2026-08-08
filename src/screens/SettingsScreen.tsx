@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Alert, Share, Linking } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { setupChannels } from '../notifications/channels';
-import { scheduleAllNotifications } from '../notifications/scheduler';
+import { scheduleAllNotifications, clearAllNotifications } from '../notifications/scheduler';
 import { playPreview } from '../utils/sound';
 import { openExactAlarmSettings } from '../utils/exactAlarm';
 import { useNavigation } from '@react-navigation/native';
@@ -83,6 +83,7 @@ export function SettingsScreen() {
           text: 'Reset app',
           style: 'destructive',
           onPress: async () => {
+            await clearAllNotifications();
             await resetDatabase();
             await seedIronPacks();
             await seedSagePacks();

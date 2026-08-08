@@ -165,6 +165,11 @@ export async function cancelAllNotifications(): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
 
+export async function clearAllNotifications(): Promise<void> {
+  await Notifications.cancelAllScheduledNotificationsAsync();
+  await Notifications.dismissAllNotificationsAsync();
+}
+
 // Dismisses delivered notifications that are stale or superseded:
 //   - Any notification from a previous calendar day.
 //   - Anchor notifications from an earlier slot when a newer one has fired.
