@@ -48,4 +48,4 @@ If this policy changes, the update will be posted here with a revised "Last upda
 
 ## Contact
 
-Questions about this policy can be sent to jjbutler74@gmail.com.
+Questions about this policy can be sent to uglyandawesome@gmail.com.

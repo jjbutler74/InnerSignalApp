@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Alert, Share } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, Alert, Share, Linking } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { setupChannels } from '../notifications/channels';
 import { scheduleAllNotifications } from '../notifications/scheduler';
@@ -220,6 +220,10 @@ export function SettingsScreen() {
             value="JSON"
             topBorder={false}
             onPress={handleExport}
+          />
+          <PressableRow
+            label="Privacy policy"
+            onPress={() => Linking.openURL('https://github.com/jjbutler74/InnerSignalApp/blob/master/PRIVACY.md')}
           />
           <PressableRow
             label="Start fresh"
