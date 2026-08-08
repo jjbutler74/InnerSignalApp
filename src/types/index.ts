@@ -22,6 +22,7 @@ export interface Affirmation {
   isFavorite: boolean;
   seenCount: number;
   createdAt: string; // ISO date string
+  isBuiltIn: boolean;
 }
 
 export interface JournalEntry {

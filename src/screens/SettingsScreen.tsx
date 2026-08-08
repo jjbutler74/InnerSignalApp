@@ -76,7 +76,7 @@ export function SettingsScreen() {
   const handleReset = () => {
     Alert.alert(
       'Start fresh?',
-      'Your journal entries, streak, and settings will be cleared. Affirmations stay. This cannot be undone.',
+      'Your journal entries, streak, settings, and any custom affirmations will be deleted. Built-in affirmation packs are kept. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {

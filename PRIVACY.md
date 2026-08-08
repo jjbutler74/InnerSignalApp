@@ -36,7 +36,7 @@ The app does not use these permissions to collect or transmit any personal infor
 
 ## Data deletion
 
-You can erase all of your data at any time from **Settings → Start fresh**, which permanently deletes your journal entries, streak history, and preferences from the device. Uninstalling the app also removes all locally stored data.
+You can erase all of your data at any time from **Settings → Start fresh**, which permanently deletes your journal entries, streak history, preferences, and any custom affirmations you have added. Built-in affirmation packs are kept so the app remains usable. Uninstalling the app also removes all locally stored data.
 
 ## Children's privacy
 

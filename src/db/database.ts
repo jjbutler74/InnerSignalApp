@@ -81,6 +81,16 @@ async function migrate(db: SQLite.SQLiteDatabase) {
       PRAGMA user_version = 2;
     `);
   }
+
+  if (version < 3) {
+    // Distinguish seeded affirmations from user-written ones so "Start fresh"
+    // can delete custom affirmations while keeping built-in content.
+    // All rows that exist at migration time are seeded content → DEFAULT 1.
+    await db.execAsync(`
+      ALTER TABLE affirmations ADD COLUMN is_built_in INTEGER NOT NULL DEFAULT 1;
+      PRAGMA user_version = 3;
+    `);
+  }
 }
 
 export async function resetDatabase(): Promise<void> {
@@ -89,6 +99,7 @@ export async function resetDatabase(): Promise<void> {
     DELETE FROM journal_entries;
     DELETE FROM completions;
     DELETE FROM settings;
+    DELETE FROM affirmations WHERE is_built_in = 0;
     UPDATE affirmations SET seen_count = 0, is_favorite = 0;
   `);
 }

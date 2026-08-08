@@ -95,7 +95,7 @@ export async function setPackActive(id: string, active: boolean): Promise<void> 
 
 type AffirmationRow = {
   id: string; text: string; pack_id: string;
-  is_favorite: number; seen_count: number; created_at: string;
+  is_favorite: number; seen_count: number; created_at: string; is_built_in: number;
 };
 
 function rowToAffirmation(r: AffirmationRow): Affirmation {
@@ -106,6 +106,7 @@ function rowToAffirmation(r: AffirmationRow): Affirmation {
     isFavorite: r.is_favorite === 1,
     seenCount: r.seen_count,
     createdAt: r.created_at,
+    isBuiltIn: r.is_built_in === 1,
   };
 }
 
@@ -122,10 +123,10 @@ export async function insertAffirmation(text: string, packId: string): Promise<A
   const id = uid();
   const createdAt = new Date().toISOString();
   await db.runAsync(
-    'INSERT INTO affirmations (id, text, pack_id, is_favorite, seen_count, created_at) VALUES (?, ?, ?, 0, 0, ?)',
+    'INSERT INTO affirmations (id, text, pack_id, is_favorite, seen_count, created_at, is_built_in) VALUES (?, ?, ?, 0, 0, ?, 0)',
     [id, text, packId, createdAt],
   );
-  return { id, text, packId, isFavorite: false, seenCount: 0, createdAt };
+  return { id, text, packId, isFavorite: false, seenCount: 0, createdAt, isBuiltIn: false };
 }
 
 export async function toggleFavorite(id: string, current: boolean): Promise<void> {
@@ -158,7 +159,7 @@ export async function insertPackWithAffirmations(
     );
     for (const text of texts) {
       await db.runAsync(
-        'INSERT OR IGNORE INTO affirmations (id, text, pack_id, is_favorite, seen_count, created_at) VALUES (?, ?, ?, 0, 0, ?)',
+        'INSERT OR IGNORE INTO affirmations (id, text, pack_id, is_favorite, seen_count, created_at, is_built_in) VALUES (?, ?, ?, 0, 0, ?, 1)',
         [uid(), text, packId, now],
       );
     }
