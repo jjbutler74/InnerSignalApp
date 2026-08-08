@@ -212,8 +212,9 @@ export default function App() {
         setInitialRoute(settings.onboardingComplete ? 'Today' : 'OnboardingWelcome');
         setStoresReady(true);
         await SplashScreen.hideAsync();
-      } catch {
-        await SplashScreen.hideAsync();
+      } catch (err) {
+        console.error('[InnerSignal] startup failed:', err instanceof Error ? err.message : String(err));
+        try { await SplashScreen.hideAsync(); } catch {}
         setStartupError(true);
       }
     })();
