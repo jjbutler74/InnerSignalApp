@@ -49,7 +49,6 @@ export interface UserSettings {
   favoritesOnly: boolean;
   onboardingComplete: boolean;
   tonePreference: TonePreference;
-  exactAlarmPromptSeen: boolean;
 }
 
 export interface Completion {
@@ -82,5 +81,4 @@ export const DEFAULT_SETTINGS: UserSettings = {
   favoritesOnly: false,
   onboardingComplete: false,
   tonePreference: 'balance',
-  exactAlarmPromptSeen: false,
 };

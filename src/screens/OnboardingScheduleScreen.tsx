@@ -50,7 +50,7 @@ export function OnboardingScheduleScreen() {
   ];
 
   const goToApp = () =>
-    nav.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Lock' }] }));
+    nav.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Today' }] }));
 
   const handleGetStarted = async () => {
     await update({

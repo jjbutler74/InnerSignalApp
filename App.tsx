@@ -76,6 +76,11 @@ function navigateForNotification(response: Notifications.NotificationResponse): 
     return;
   }
 
+  if (slot !== 'anchor1' && slot !== 'anchor2' && slot !== 'anchor3') {
+    navigationRef.navigate('Today');
+    return;
+  }
+
   if (slot === 'anchor1' || slot === 'anchor2' || slot === 'anchor3') {
     // Compute the active slot directly from current time — no store dependency.
     const schedule = useSettingsStore.getState();

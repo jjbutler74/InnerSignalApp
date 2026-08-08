@@ -55,6 +55,10 @@ export function LockScreen() {
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    if (!activeAffirmation) nav.navigate('Today');
+  }, [activeAffirmation, nav]);
+
   const [snoozed, setSnoozed] = useState(false);
   const handleSnooze = async () => {
     if (snoozed) return;

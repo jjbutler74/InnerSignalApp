@@ -23,8 +23,7 @@ export async function loadSettings(): Promise<Partial<UserSettings>> {
   if (map.theme            !== undefined) out.theme             = map.theme as UserSettings['theme'];
   if (map.favoritesOnly      !== undefined) out.favoritesOnly      = map.favoritesOnly === '1';
   if (map.onboardingComplete !== undefined) out.onboardingComplete = map.onboardingComplete === '1';
-  if (map.tonePreference        !== undefined) out.tonePreference        = map.tonePreference as UserSettings['tonePreference'];
-  if (map.exactAlarmPromptSeen  !== undefined) out.exactAlarmPromptSeen  = map.exactAlarmPromptSeen === '1';
+  if (map.tonePreference !== undefined) out.tonePreference = map.tonePreference as UserSettings['tonePreference'];
   return out;
 }
 
@@ -45,8 +44,7 @@ export async function saveSettings(settings: Partial<UserSettings>): Promise<voi
   if (settings.theme            !== undefined) entries.push(['theme',             settings.theme]);
   if (settings.favoritesOnly      !== undefined) entries.push(['favoritesOnly',      settings.favoritesOnly ? '1' : '0']);
   if (settings.onboardingComplete !== undefined) entries.push(['onboardingComplete', settings.onboardingComplete ? '1' : '0']);
-  if (settings.tonePreference        !== undefined) entries.push(['tonePreference',        settings.tonePreference]);
-  if (settings.exactAlarmPromptSeen  !== undefined) entries.push(['exactAlarmPromptSeen',  settings.exactAlarmPromptSeen ? '1' : '0']);
+  if (settings.tonePreference !== undefined) entries.push(['tonePreference', settings.tonePreference]);
 
   await db.withTransactionAsync(async () => {
     for (const [key, value] of entries) {
@@ -76,15 +74,6 @@ export async function getPacks(): Promise<Pack[]> {
   return rows.map(rowToPack);
 }
 
-export async function insertPack(pack: Omit<Pack, 'id'>): Promise<Pack> {
-  const db = await getDb();
-  const id = uid();
-  await db.runAsync(
-    'INSERT INTO packs (id, name, tone, is_built_in, is_active) VALUES (?, ?, ?, ?, ?)',
-    [id, pack.name, pack.tone, pack.isBuiltIn ? 1 : 0, pack.isActive ? 1 : 0],
-  );
-  return { id, ...pack };
-}
 
 export async function setPackActive(id: string, active: boolean): Promise<void> {
   const db = await getDb();

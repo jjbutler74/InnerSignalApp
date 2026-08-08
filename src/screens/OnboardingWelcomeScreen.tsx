@@ -35,6 +35,8 @@ export function OnboardingWelcomeScreen() {
             <View style={[s.dot, s.dotActive, { backgroundColor: SAGE_SOFT }]}/>
             <View style={[s.dot, { backgroundColor: 'rgba(255,255,255,0.2)' }]}/>
             <View style={[s.dot, { backgroundColor: 'rgba(255,255,255,0.2)' }]}/>
+            <View style={[s.dot, { backgroundColor: 'rgba(255,255,255,0.2)' }]}/>
+            <View style={[s.dot, { backgroundColor: 'rgba(255,255,255,0.2)' }]}/>
           </View>
         </View>
 

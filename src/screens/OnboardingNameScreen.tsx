@@ -33,6 +33,7 @@ export function OnboardingNameScreen() {
             <View style={[s.dot, s.dotActive, { backgroundColor: t.sage }]}/>
             <View style={[s.dot, { backgroundColor: t.divider }]}/>
             <View style={[s.dot, { backgroundColor: t.divider }]}/>
+            <View style={[s.dot, { backgroundColor: t.divider }]}/>
           </View>
 
           <View style={s.hero}>
