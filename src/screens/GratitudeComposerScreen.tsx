@@ -47,7 +47,7 @@ export function GratitudeComposerScreen() {
     const entry = await saveDraft();
     if (entry) {
       await loadStats();
-      scheduleAllNotifications(useSettingsStore.getState());
+      scheduleAllNotifications(useSettingsStore.getState()).catch(() => {});
       nav.dispatch(CommonActions.reset({ index: 1, routes: [{ name: 'Today' }, { name: 'GratitudeJournal' }] }));
     }
   };

@@ -32,6 +32,7 @@ import { setupChannels } from './src/notifications/channels';
 import { scheduleAllNotifications, cleanupNotifications } from './src/notifications/scheduler';
 import { initAudio } from './src/utils/sound';
 import { isAnchorMissed } from './src/utils/anchorWindow';
+import { consumeExactAlarmReschedule } from './src/utils/exactAlarm';
 import { today, localDateString } from './src/db/database';
 
 import { TodayScreen } from './src/screens/TodayScreen';
@@ -259,7 +260,7 @@ export default function App() {
       if (nextState === 'active') {
         const settings = useSettingsStore.getState();
         const now = Date.now();
-        if (now - lastRescheduledRef.current > 30_000) {
+        if (now - lastRescheduledRef.current > 30_000 || consumeExactAlarmReschedule()) {
           lastRescheduledRef.current = now;
           scheduleAllNotifications(settings).catch(() => {});
         }

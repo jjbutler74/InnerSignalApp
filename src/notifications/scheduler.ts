@@ -195,6 +195,7 @@ export async function cleanupNotifications(settings: UserSettings): Promise<void
       if (localDateString(new Date(n.date * 1000)) !== todayStr) return true;
       const slot = n.request.content.data?.slot as string | undefined;
       if (slot === 'anchor1' || slot === 'anchor2' || slot === 'anchor3') {
+        if (currentAnchorSlot === null) return false; // before first anchor: keep all
         return slot !== currentAnchorSlot;
       }
       return false;

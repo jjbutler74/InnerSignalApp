@@ -124,7 +124,7 @@ export function WeeklyRecapScreen() {
         </Card>
 
         {/* Top affirmation */}
-        {topAffirmation && (
+        {topAffirmation && topAffirmation.seenCount > 0 && (
           <Card>
             <Eyebrow style={{ color: t.sage }}>The one that stayed</Eyebrow>
             <Text style={[s.topAff, { fontFamily: fonts.display, color: t.ink }]}>
