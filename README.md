@@ -27,14 +27,14 @@ A **streak counter** and **weekly mood arc** give you a shape of your practice o
 - **Affirmation tone system** — choose Iron (Code, Composure, Discipline, Focus, Honour), Sage (Warmth, Stillness, Growth, Resilience), or Balance (both); switching packs replaces the active set while keeping the other intact
 - **Custom affirmations** — add your own; custom entries are kept separate from built-in packs and removed by "Start fresh"
 - **Affirmation library** — browse all packs, filter by pack or favourites, mark favourites
-- **Streak tracking** — honest: only counts slots you actually completed in their window
-- **Weekly recap** — mood arc chart, day streak, total affirmations seen, evenings logged, standout affirmation of the week
+- **Streak tracking** — counts any day where you completed at least one affirmation slot or wrote a gratitude entry
+- **Weekly recap** — mood arc chart, day streak, total affirmations seen, evenings logged, most-seen affirmation (by lifetime seen count)
 - **Gratitude journal** — per-entry mood (Heavy / Mixed / Steady / Clear / Resolved), scrollable history with calendar strip
 - **Dark mode by default** — full light/dark theming via token system
 - **Weekend mode** — optionally skips midday and evening affirmations on Sat/Sun
 - **Quiet hours** — suppresses notifications between configurable times
 - **Favourites-only mode** — draws daily picks only from saved affirmations
-- **Export** — full data export as JSON
+- **Export** — journal and settings export as JSON (affirmations, favourites, and completion records are not included)
 - **Private by design** — everything in SQLite on-device; no backend, no analytics, no ads. Data may be included in Android's standard encrypted device backup if the user has backup enabled.
 
 ---
@@ -65,7 +65,7 @@ Five-screen flow: Welcome → Name → Tone selection → Schedule + notificatio
 Uses individual `DATE` triggers (not `DAILY`/`WEEKLY` repeating) so past-today times are simply skipped rather than firing immediately as catch-up. Reschedules the next 7 days on every app launch and on every foreground transition (30-second debounce to avoid double-firing at startup). Requires `SCHEDULE_EXACT_ALARM` permission declared in `app.json` and granted by the user via "Alarms & reminders" in system settings.
 
 ### Notification tap routing
-Current-slot affirmation taps go to **LockScreen** (affirmation preview + "Read & absorb" / "Snooze" choice), then on to **AffirmationMoment**. Past-slot taps (notification delivered in a previous time window, same day) go directly to AffirmationMoment in review-only mode (no streak credit). Notifications from a previous calendar day also open review-only. Unknown or missing slot values fall through to Today.
+Current-slot affirmation taps go to **LockScreen** (affirmation preview + "Read & absorb" / "Snooze" choice), then on to **AffirmationMoment**. Past-slot taps (notification delivered in a previous time window, same day) go directly to AffirmationMoment in review-only mode (no streak credit). Notifications from a previous calendar day navigate to **Today** (the notification is stale; no affirmation is shown). Unknown or missing slot values also fall through to Today.
 
 Gratitude notifications always route based on **today's** journal state, regardless of when the notification was delivered — if today's entry is already written they open GratitudeComposer (edit mode), otherwise EveningNotif. The journal entry always saves to `today()`.
 
@@ -162,7 +162,7 @@ The `withReleaseSigning` plugin reads these at build time and injects them into 
 
 ## Privacy
 
-No data is sent to the developer or any third party. No accounts, analytics SDK, crash reporting, or ads. All journal entries, affirmations, and settings live in a local SQLite database. Data may be included in Android's standard encrypted cloud backup (Google Drive) if the user has device backup enabled — this is an OS-level service under the user's control. Uninstalling the app removes all locally stored data. See [PRIVACY.md](PRIVACY.md) for the full policy.
+InnerSignal does not send data to the developer or third parties. No accounts, analytics SDK, crash reporting, or ads. All journal entries, affirmations, and settings live in a local SQLite database. Android may separately include app data in its standard encrypted backup when device backup is enabled — this is an OS-level service under the user's control. Uninstalling the app removes all locally stored data. See [PRIVACY.md](PRIVACY.md) for the full policy.
 
 ---
 
