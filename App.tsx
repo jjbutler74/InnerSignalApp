@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, ActivityIndicator, AppState } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, AppState } from 'react-native';
 import { seedIfEmpty, seedSagePacks } from './src/db/seed';
 import { useSettingsStore } from './src/store/settingsStore';
 import { useAffirmationStore } from './src/store/affirmationStore';
@@ -179,6 +179,8 @@ export default function App() {
   const loadJournal      = useJournalStore(s => s.load);
   const loadStats        = useStatsStore(s => s.load);
   const [storesReady, setStoresReady] = useState(false);
+  const [startupError, setStartupError] = useState(false);
+  const [startupAttempt, setStartupAttempt] = useState(0);
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList>('Today');
   const responseListenerRef = useRef<Notifications.EventSubscription | null>(null);
   const lastNotificationResponse = Notifications.useLastNotificationResponse();
@@ -187,21 +189,27 @@ export default function App() {
 
   useEffect(() => {
     if (!fontsLoaded) return;
+    setStartupError(false);
     (async () => {
-      await seedIfEmpty();
-      await seedSagePacks();
-      const settings = await loadSettings().then(() => useSettingsStore.getState());
-      await setupChannels(settings.sound);
-      await initAudio();
-      await Promise.all([loadAffirmations(), loadJournal(), loadStats()]);
-      await scheduleAllNotifications(settings);
-      await cleanupNotifications(settings);
+      try {
+        await seedIfEmpty();
+        await seedSagePacks();
+        const settings = await loadSettings().then(() => useSettingsStore.getState());
+        await setupChannels(settings.sound);
+        await initAudio();
+        await Promise.all([loadAffirmations(), loadJournal(), loadStats()]);
+        await scheduleAllNotifications(settings);
+        await cleanupNotifications(settings);
 
-      setInitialRoute(settings.onboardingComplete ? 'Today' : 'OnboardingWelcome');
-      setStoresReady(true);
-      await SplashScreen.hideAsync();
+        setInitialRoute(settings.onboardingComplete ? 'Today' : 'OnboardingWelcome');
+        setStoresReady(true);
+        await SplashScreen.hideAsync();
+      } catch {
+        await SplashScreen.hideAsync();
+        setStartupError(true);
+      }
     })();
-  }, [fontsLoaded]);
+  }, [fontsLoaded, startupAttempt]);
 
   // Cold-start: app was launched by tapping a notification (nav not yet ready).
   useEffect(() => {
@@ -251,6 +259,22 @@ export default function App() {
     });
     return () => sub.remove();
   }, [storesReady]);
+
+  if (startupError) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1A2B4A', gap: 24 }}>
+        <Text style={{ color: '#C8BFA8', fontSize: 15, textAlign: 'center', paddingHorizontal: 48, lineHeight: 22 }}>
+          Something went wrong starting up.
+        </Text>
+        <Pressable
+          onPress={() => setStartupAttempt(n => n + 1)}
+          style={{ paddingVertical: 10, paddingHorizontal: 28, borderRadius: 20, borderWidth: 1, borderColor: '#D4A24C' }}
+        >
+          <Text style={{ color: '#D4A24C', fontSize: 14 }}>Try again</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   if (!fontsLoaded || !storesReady) {
     return (
