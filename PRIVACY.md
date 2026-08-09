@@ -33,6 +33,7 @@ InnerSignal does not use any analytics, advertising, or crash-reporting services
 InnerSignal requests a small number of Android permissions, used only as follows:
 
 - **Notifications** — to deliver your scheduled affirmation and gratitude reminders.
+- **Alarms & reminders** — to schedule affirmation notifications at exact times. This permission (`SCHEDULE_EXACT_ALARM`) is required on Android 12 and later for time-precise delivery of your anchors.
 - **Vibrate** — for notification feedback.
 - **Receive boot completed** — to reschedule your reminders after your device restarts.
 
