@@ -172,7 +172,7 @@ export function TodayScreen() {
         <Text style={[s.subtext, { color: t.muted, fontFamily: fonts.sans }]}>
           {nextAnchor === 'tomorrow'
             ? 'Your next anchor lands tomorrow.'
-            : `Your next anchor lands at ${nextAnchor}.`}
+            : `Your next anchor lands at ${fmtTime(nextAnchor)}.`}
         </Text>
       </View>
 
@@ -252,7 +252,7 @@ export function TodayScreen() {
             const isPending  = status === 'pending';
             return (
               <Pressable
-                key={item.time}
+                key={item.slot}
                 disabled={isPending}
                 onPress={() => item.slot === 'gratitude'
                   ? nav.navigate(status === 'done' ? 'GratitudeComposer' : 'EveningNotif')

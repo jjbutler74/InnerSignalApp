@@ -63,7 +63,9 @@ export function LockScreen() {
   const handleSnooze = async () => {
     if (snoozed) return;
     setSnoozed(true);
-    await snoozeAffirmationNotification(useSettingsStore.getState(), slot);
+    try {
+      await snoozeAffirmationNotification(useSettingsStore.getState(), slot);
+    } catch {}
     nav.navigate('Today');
   };
 

@@ -64,11 +64,13 @@ async function migrate(db: SQLite.SQLiteDatabase) {
     // Deduplicate any existing (date, slot) pairs, then enforce uniqueness.
     // Keeps the earliest rowid so no completion history is lost.
     await db.execAsync(`
+      BEGIN;
       DELETE FROM completions WHERE rowid NOT IN (
         SELECT MIN(rowid) FROM completions GROUP BY date, slot
       );
       CREATE UNIQUE INDEX IF NOT EXISTS idx_completions_date_slot ON completions(date, slot);
       PRAGMA user_version = 1;
+      COMMIT;
     `);
   }
 
@@ -77,8 +79,10 @@ async function migrate(db: SQLite.SQLiteDatabase) {
     // toggled independently. All existing built-in packs are Iron-style,
     // so DEFAULT 'iron' is the correct backfill.
     await db.execAsync(`
+      BEGIN;
       ALTER TABLE packs ADD COLUMN category TEXT NOT NULL DEFAULT 'iron';
       PRAGMA user_version = 2;
+      COMMIT;
     `);
   }
 
@@ -87,8 +91,10 @@ async function migrate(db: SQLite.SQLiteDatabase) {
     // can delete custom affirmations while keeping built-in content.
     // All rows that exist at migration time are seeded content → DEFAULT 1.
     await db.execAsync(`
+      BEGIN;
       ALTER TABLE affirmations ADD COLUMN is_built_in INTEGER NOT NULL DEFAULT 1;
       PRAGMA user_version = 3;
+      COMMIT;
     `);
   }
 }

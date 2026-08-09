@@ -35,8 +35,8 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   load: async () => {
     const [completionDates, journalDates, counts, weeklyMoods, todaySlots] = await Promise.all([
-      getCompletionDates(60),
-      getJournalDates(60),
+      getCompletionDates(365),
+      getJournalDates(365),
       getTotalCounts(),
       getWeeklyMoodValues(),
       getTodayCompletedSlots(),
@@ -70,11 +70,13 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
   recordCompletion: async (affirmationId, slot) => {
     await recordCompletion(affirmationId, slot);
     const t = today();
+    const todayDow = (new Date().getDay() + 6) % 7;
     set(s => ({
       totalSeen: s.totalSeen + 1,
       lastCompletedDate: t,
       streakDays: s.lastCompletedDate === t ? s.streakDays : s.streakDays + 1,
       completedSlotsToday: new Set([...s.completedSlotsToday, slot]),
+      weeklyCompletions: s.weeklyCompletions.map((v, i) => i === todayDow ? true : v),
     }));
   },
 }));
@@ -83,7 +85,7 @@ function computeStreak(activeDates: Set<string>): number {
   let streak = 0;
   const d = new Date();
   // Allow today to count even if not yet completed (don't break streak mid-day)
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 365; i++) {
     const key = localDateString(d);
     if (activeDates.has(key)) {
       streak++;
