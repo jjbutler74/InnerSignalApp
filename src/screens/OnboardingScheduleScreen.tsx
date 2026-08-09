@@ -124,7 +124,14 @@ export function OnboardingScheduleScreen() {
           is24Hour
           display="spinner"
           onChange={(_, date) => {
-            if (date) setTimes(prev => ({ ...prev, [picking]: fromDate(date) }));
+            if (date) {
+              const val = fromDate(date);
+              setTimes(prev => {
+                const next = { ...prev, [picking!]: val };
+                const [a1, a2, a3] = [next.anchor1, next.anchor2, next.anchor3].sort();
+                return { ...next, anchor1: a1, anchor2: a2, anchor3: a3 };
+              });
+            }
             setPicking(null);
           }}
         />

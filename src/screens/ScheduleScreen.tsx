@@ -51,12 +51,15 @@ export function ScheduleScreen() {
     if (date && picking) {
       const val = fromDate(date);
       let partial: Parameters<typeof update>[0];
-      if      (picking === 'gratitude')   partial = { scheduleGratitude: val };
-      else if (picking === 'anchor1')     partial = { scheduleAnchor1: val };
-      else if (picking === 'anchor2')     partial = { scheduleAnchor2: val };
-      else if (picking === 'anchor3')     partial = { scheduleAnchor3: val };
-      else if (picking === 'quietStart')  partial = { quietHoursStart: val };
-      else                                partial = { quietHoursEnd: val };
+      if (picking === 'anchor1' || picking === 'anchor2' || picking === 'anchor3') {
+        const a1 = picking === 'anchor1' ? val : anchor1;
+        const a2 = picking === 'anchor2' ? val : anchor2;
+        const a3 = picking === 'anchor3' ? val : anchor3;
+        const [s1, s2, s3] = [a1, a2, a3].sort();
+        partial = { scheduleAnchor1: s1, scheduleAnchor2: s2, scheduleAnchor3: s3 };
+      } else if (picking === 'gratitude')  partial = { scheduleGratitude: val };
+      else if (picking === 'quietStart')   partial = { quietHoursStart: val };
+      else                                 partial = { quietHoursEnd: val };
       update(partial).then(() => scheduleAllNotifications(useSettingsStore.getState()));
     }
     setPicking(null);
