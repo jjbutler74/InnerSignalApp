@@ -10,6 +10,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { useSettingsStore } from '../store/settingsStore';
 import * as Notifications from 'expo-notifications';
 import { scheduleAllNotifications } from '../notifications/scheduler';
+import { sortAndEnforceGap } from '../utils/anchorWindow';
 import type { RootStackParamList } from '../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'OnboardingSchedule'>;
@@ -128,7 +129,7 @@ export function OnboardingScheduleScreen() {
               const val = fromDate(date);
               setTimes(prev => {
                 const next = { ...prev, [picking!]: val };
-                const [a1, a2, a3] = [next.anchor1, next.anchor2, next.anchor3].sort();
+                const [a1, a2, a3] = sortAndEnforceGap(next.anchor1, next.anchor2, next.anchor3);
                 return { ...next, anchor1: a1, anchor2: a2, anchor3: a3 };
               });
             }

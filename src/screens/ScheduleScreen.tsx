@@ -10,6 +10,7 @@ import { ChevL, Moon } from '../components/Icons';
 import { useTheme } from '../theme/ThemeContext';
 import { useSettingsStore } from '../store/settingsStore';
 import { scheduleAllNotifications } from '../notifications/scheduler';
+import { sortAndEnforceGap } from '../utils/anchorWindow';
 import { Toggle } from '../components/Toggle';
 import type { RootStackParamList } from '../../App';
 
@@ -55,7 +56,7 @@ export function ScheduleScreen() {
         const a1 = picking === 'anchor1' ? val : anchor1;
         const a2 = picking === 'anchor2' ? val : anchor2;
         const a3 = picking === 'anchor3' ? val : anchor3;
-        const [s1, s2, s3] = [a1, a2, a3].sort();
+        const [s1, s2, s3] = sortAndEnforceGap(a1, a2, a3);
         partial = { scheduleAnchor1: s1, scheduleAnchor2: s2, scheduleAnchor3: s3 };
       } else if (picking === 'gratitude')  partial = { scheduleGratitude: val };
       else if (picking === 'quietStart')   partial = { quietHoursStart: val };
