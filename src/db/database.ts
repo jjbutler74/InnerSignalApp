@@ -4,8 +4,9 @@ let _db: SQLite.SQLiteDatabase | null = null;
 
 export async function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (_db) return _db;
-  _db = await SQLite.openDatabaseAsync('innersignal.db');
-  await migrate(_db);
+  const db = await SQLite.openDatabaseAsync('innersignal.db');
+  await migrate(db);
+  _db = db;
   return _db;
 }
 
