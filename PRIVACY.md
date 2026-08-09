@@ -22,7 +22,11 @@ InnerSignal has no backend server, no user accounts, and no sign-in of any kind.
 
 ## Third-party services
 
-InnerSignal does not use any analytics, advertising, or crash-reporting services. No data is shared with third parties by InnerSignal. Android backup is handled by Google as part of your device backup settings. InnerSignal's developer cannot access or retrieve these backups.
+InnerSignal does not use any analytics, advertising, or crash-reporting services.
+
+**Android notifications (Firebase SDK):** InnerSignal uses the expo-notifications library for scheduling local notifications. On Android, this library bundles the Firebase Cloud Messaging (FCM) SDK, which is required by the underlying notification infrastructure. Even though InnerSignal uses only locally-scheduled notifications and never receives server-sent push notifications, the Firebase SDK initializes automatically when the app launches. During initialization, Firebase generates a per-installation identifier (Firebase Installation ID) and transmits it along with basic app metadata (app version, Android platform) to Google's Firebase servers. InnerSignal's developer does not receive, access, or use this data in any way. For details about what Firebase collects, see [Firebase's privacy and security documentation](https://firebase.google.com/support/privacy).
+
+**Android backup:** Backup is handled by Google as part of your device backup settings. InnerSignal's developer cannot access or retrieve these backups.
 
 ## Permissions
 

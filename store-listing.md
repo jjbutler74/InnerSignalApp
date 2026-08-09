@@ -35,13 +35,27 @@ InnerSignal's first public release: three scheduled daily affirmations, guided b
 # Data Safety form (Play Console → App content → Data safety)
 
 **Does your app collect or share any of the required user data types?**
-→ **No**
+→ **Yes** (limited — automatically collected by the bundled Firebase SDK; not collected or used by the developer)
 
-InnerSignal stores app data locally in SQLite and does not transmit it to the developer or third parties. It has no backend, analytics SDK, advertising SDK, or crash-reporting SDK. Android may include app data in its standard encrypted backup when the user has device backup enabled; this is an operating-system service controlled by the user. Confirm the final Data Safety answers against the production AAB and Google Play's current system-service guidance before submission.
+InnerSignal itself has no backend, analytics SDK, advertising SDK, or crash-reporting SDK, and does not transmit user data. However, the expo-notifications library bundles the Firebase Cloud Messaging (FCM) SDK, which auto-initializes on every Android app launch and transmits a small amount of data to Google's Firebase servers. You must disclose this in the Play Console Data Safety form.
 
-If Play Console still prompts for a security practices section:
-- **Is data encrypted in transit?** → N/A / not applicable, no data is transmitted
-- **Can users request data deletion?** → Yes — Settings → "Start fresh" erases journal entries, completion history, preferences, favorites, seen counts, and custom affirmations. Built-in affirmation packs remain. Uninstalling removes the app's local data; Android may retain a backup if device backup is enabled.
+**Device or other IDs**
+- **Collected:** Yes — Firebase generates a per-installation identifier (Firebase Installation ID, a UUID) on first launch and sends it to Firebase servers on subsequent launches for token refresh.
+- **Shared with third parties:** Yes — Google (Firebase infrastructure). InnerSignal's developer cannot access this data.
+- **Purpose:** App functionality — required by the bundled notification library infrastructure.
+- **Optional / can users opt out?** No — this happens automatically at app startup.
+
+**App info and performance**
+- **Collected:** Yes — Firebase sends the app version number and Android platform identifier alongside the Installation ID.
+- **Shared with third parties:** Yes — Google (Firebase infrastructure).
+- **Purpose:** App functionality.
+- **Optional / can users opt out?** No.
+
+**Security practices section:**
+- **Is data encrypted in transit?** → Yes — Firebase SDK uses TLS for all server communication.
+- **Can users request data deletion?** → Yes — Settings → "Start fresh" erases all InnerSignal-controlled data (journal entries, completion history, preferences, favorites, seen counts, and custom affirmations). Built-in affirmation packs remain. Firebase Installation IDs can be reset by uninstalling the app. Uninstalling also removes all locally stored data; Android may retain a backup copy if device backup is enabled.
+
+**Note for a future release:** Firebase data collection can be suppressed by adding `firebase_data_collection_default_enabled = false` to the Android manifest. InnerSignal uses only locally-scheduled notifications (not FCM push), so local notification delivery would not be affected. This would allow the Data Safety form to revert to "No" in v1.0.28.
 
 ---
 
